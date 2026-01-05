@@ -3,7 +3,7 @@ import { streamText, generateText, tool } from 'ai';
 import { z } from 'zod';
 import { supabase } from "@/lib/supabase/client";
 import { getSurahName } from "@/lib/quran-helpers";
-import fs from 'fs';
+
 
 type CoreMessage = any;
 
@@ -278,7 +278,7 @@ Instruction: ${followUpInstruction}
 Final Messages Count: ${finalMessages.length}
 =================
 `;
-        fs.appendFileSync('assistant_debug.log', debugInfo);
+        console.log(debugInfo);
 
         console.log(">>> [Final] Messages to Turn 2:", JSON.stringify(finalMessages, null, 2));
         console.log(">>> [Final] Streaming response...");
