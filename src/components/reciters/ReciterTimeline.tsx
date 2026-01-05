@@ -1,0 +1,137 @@
+"use client";
+
+import { useMemo } from "react";
+import Link from "next/link";
+import PlayButton from "@/components/player/PlayButton";
+import { Track } from "@/context/PlayerContext";
+import { useLeanMode } from "@/context/LeanModeContext";
+
+interface TimelineRecording {
+    id: string;
+    title?: string;
+    surah_number: number;
+    ayah_start: number;
+    ayah_end: number;
+    recording_date: {
+        year: number;
+        month?: number;
+        day?: number;
+        approximate: boolean;
+    };
+    created_at: string;
+    section: {
+        name_ar: string;
+        slug: string;
+    };
+    city?: string;
+    src?: string;
+    reciterName?: string;
+    reciterId?: string;
+    duration?: string;
+}
+
+interface ReciterTimelineProps {
+    recordings: TimelineRecording[];
+}
+
+export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
+    const { isLean } = useLeanMode();
+
+    // Group recordings by Year
+    const groupedByYear = useMemo(() => {
+        const groups: Record<number, TimelineRecording[]> = {};
+
+        recordings.forEach(rec => {
+            const year = rec.recording_date?.year || 0;
+            if (!groups[year]) {
+                groups[year] = [];
+            }
+            groups[year].push(rec);
+        });
+
+        // Sort years descending
+        return Object.entries(groups)
+            .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA));
+    }, [recordings]);
+
+    if (recordings.length === 0) {
+        return (
+            <div className="text-center py-10 opacity-60">
+                لا توجد بيانات زمنية متاحة للتلاوات.
+            </div>
+        );
+    }
+
+    return (
+        <div className={`relative border-r border-slate-200 dark:border-slate-700 mr-4 ${isLean ? 'space-y-6' : 'space-y-12'}`}>
+            {groupedByYear.map(([year, groupRecordings]) => (
+                <div key={year} className={`relative ${isLean ? 'pr-6' : 'pr-8'}`}>
+                    {/* Year Marker */}
+                    <div className={`absolute -right-[7px] top-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 ${isLean ? 'w-2.5 h-2.5 -right-[5px]' : ''}`}></div>
+
+                    <h3 className={`font-bold text-slate-900 dark:text-white mb-6 -mt-2 ${isLean ? 'text-lg mb-3' : 'text-2xl'}`}>
+                        {year === "0" ? "تاريخ غير محدد" : year}
+                    </h3>
+
+                    <div className={`grid grid-cols-1 ${isLean ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
+                        {groupRecordings.map(rec => {
+                            const track: Track = {
+                                id: rec.id,
+                                title: rec.title || `سورة ${rec.surah_number}`,
+                                reciterName: rec.reciterName || 'Unknown',
+                                src: rec.src || '',
+                                surahNumber: rec.surah_number,
+                                reciterId: rec.reciterId || 'unknown'
+                            };
+
+                            return (
+                                <div key={rec.id} className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all hover:shadow-md group overflow-hidden ${isLean ? 'rounded-lg p-0' : ''}`}>
+                                    <div className={isLean ? 'p-3' : 'p-5'}>
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="flex-1 min-w-0">
+                                                <Link href={`/recordings/${rec.id}`} className="block">
+                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors ${isLean ? 'text-base' : 'text-xl'}`}>
+                                                        {rec.title || `سورة ${rec.surah_number}`}
+                                                    </h4>
+                                                    {!isLean && (
+                                                        <>
+                                                            <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mb-2">
+                                                                {rec.section?.name_ar}
+                                                            </p>
+                                                            <p className="text-xs text-slate-500 dark:text-slate-400 mb-3 font-mono">
+                                                                (الآيات {rec.ayah_start} - {rec.ayah_end})
+                                                            </p>
+                                                        </>
+                                                    )}
+                                                </Link>
+
+                                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                                                    {rec.city && (
+                                                        <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-1 rounded">
+                                                            📍 {rec.city}
+                                                        </span>
+                                                    )}
+                                                    {rec.recording_date.approximate && !isLean && (
+                                                        <span className="flex items-center gap-1 bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 px-2 py-1 rounded">
+                                                            ⚠️ تقريبي
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            <div className="shrink-0 pt-1">
+                                                {rec.src && (
+                                                    <PlayButton track={track} size={isLean ? "sm" : "md"} />
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
