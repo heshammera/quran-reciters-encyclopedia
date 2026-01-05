@@ -2,7 +2,8 @@
 
 import { useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { usePlayer, Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 
 function AutoPlayerInner({ queueTracks }: { queueTracks: Track[] }) {
     const searchParams = useSearchParams();

@@ -8,7 +8,7 @@ import PhaseFilter from "@/components/reciters/PhaseFilter";
 import PlayButton from "@/components/player/PlayButton";
 import AutoPlayer from "@/components/player/AutoPlayer";
 import VideoModal from "@/components/player/VideoModal";
-import { Track } from "@/context/PlayerContext";
+import { Track } from "@/types/player";
 import { SURAHS } from "@/lib/quran/metadata";
 
 interface SectionPageProps {

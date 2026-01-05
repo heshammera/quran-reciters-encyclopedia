@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { generateSession } from "@/app/actions/session";
-import { usePlayer, type Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 

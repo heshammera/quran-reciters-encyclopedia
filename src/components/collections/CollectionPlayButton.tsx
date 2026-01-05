@@ -1,7 +1,7 @@
 
 "use client";
 
-import { usePlayer } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
 
 interface CollectionPlayButtonProps {
     playlist: {
@@ -12,6 +12,7 @@ interface CollectionPlayButtonProps {
         surahNumber: number;
         slug: string;
         duration: number;
+        src: string;
     }[];
 }
 
@@ -28,7 +29,8 @@ export default function CollectionPlayButton({ playlist }: CollectionPlayButtonP
             reciterId: track.reciterId,
             reciterName: track.reciterName,
             surahNumber: track.surahNumber,
-            sectionSlug: track.slug
+            sectionSlug: track.slug,
+            src: track.src
         }));
 
         setQueue(queueItems);
@@ -41,7 +43,8 @@ export default function CollectionPlayButton({ playlist }: CollectionPlayButtonP
             reciterId: first.reciterId,
             reciterName: first.reciterName,
             surahNumber: first.surahNumber,
-            sectionSlug: first.slug
+            sectionSlug: first.slug,
+            src: first.src
         });
     };
 

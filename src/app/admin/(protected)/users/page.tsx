@@ -2,12 +2,13 @@
 import UserRow from "@/components/admin/UserRow";
 import { getUsersList } from "@/app/actions/users";
 import AddUserButton from "@/components/admin/AddUserButton";
+import { AdminUser } from "@/types/admin";
 
 export default async function UsersPage() {
     // Check if current user is admin strictly, otherwise 404/redirect
     // The Layout already checks isAdmin(), but let's be double sure or just rely on layout.
 
-    let users = [];
+    let users: AdminUser[] = [];
     try {
         users = await getUsersList();
     } catch (e) {
@@ -40,7 +41,7 @@ export default async function UsersPage() {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                        {users.map((user: any) => (
+                        {users.map((user: AdminUser) => (
                             <UserRow key={user.id} user={user} />
                         ))}
                     </tbody>

@@ -4,7 +4,8 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import Link from "next/link";
-import { usePlayer, Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 
 interface Message {
     role: string;

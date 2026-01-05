@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { findRecordingsForAyah } from "@/app/actions/compare";
-import { usePlayer, type Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 import { SURAHS } from "@/lib/quran/metadata";
 
 export default function ComparisonInterface() {
@@ -195,8 +196,8 @@ export default function ComparisonInterface() {
                                 <button
                                     onClick={() => playRecording(rec)}
                                     className={`px-4 py-2 rounded-lg font-bold text-sm transition-colors ${state.currentTrack?.id === rec.id
-                                            ? "bg-emerald-600 text-white"
-                                            : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white"
+                                        ? "bg-emerald-600 text-white"
+                                        : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 hover:bg-emerald-500 hover:text-white"
                                         }`}
                                 >
                                     {state.currentTrack?.id === rec.id ? "▶️ يُشغَّل الآن" : "▶️ استمع"}

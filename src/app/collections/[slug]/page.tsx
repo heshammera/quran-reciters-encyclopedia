@@ -52,7 +52,8 @@ export default async function CollectionDetailsPage({ params }: CollectionDetail
                 duration_seconds,
                 quality_level,
                 reciters (id, name_ar),
-                sections (id, name_ar, slug)
+                sections (id, name_ar, slug),
+                media_files (archive_url)
             )
         `)
         .eq("collection_id", collection.id)
@@ -68,7 +69,8 @@ export default async function CollectionDetailsPage({ params }: CollectionDetail
         reciterName: track.reciters.name_ar,
         surahNumber: track.surah_number,
         slug: track.sections.slug,
-        duration: track.duration_seconds
+        duration: track.duration_seconds,
+        src: track.media_files?.[0]?.archive_url || ""
     }));
 
     return (

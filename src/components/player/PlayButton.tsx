@@ -1,6 +1,7 @@
 "use client";
 
-import { usePlayer, Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 
 interface PlayButtonProps {
     track: Track;

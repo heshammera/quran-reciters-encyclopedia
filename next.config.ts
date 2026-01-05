@@ -13,10 +13,7 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  i18n: {
-    locales: ["ar"],
-    defaultLocale: "ar",
-  },
+
   experimental: {
     serverActions: {
       bodySizeLimit: "200mb",

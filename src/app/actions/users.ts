@@ -3,9 +3,10 @@
 
 import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
+import { AdminUser } from "@/types/admin";
 
 // Fetches all users from auth.users (via admin usage) and joins with user_roles
-export async function getUsersList() {
+export async function getUsersList(): Promise<AdminUser[]> {
     const supabase = createAdminClient();
 
     // 1. Get all users from Auth

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePlayer } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
 import { formatTime } from "@/lib/utils";
 import { useLeanMode } from "@/context/LeanModeContext";
 

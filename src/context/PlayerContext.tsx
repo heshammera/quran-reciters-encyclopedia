@@ -1,38 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useReducer, ReactNode } from "react";
-
-export interface Track {
-    id: string;
-    title: string;
-    reciterName: string;
-    src: string;
-    surahNumber?: number;
-    ayahStart?: number;
-    ayahEnd?: number;
-    reciterId?: string;
-    sectionSlug?: string;
-}
-
-interface PlayerState {
-    currentTrack: Track | null;
-    isPlaying: boolean;
-    queue: Track[];
-    volume: number;
-    isExpanded: boolean; // For mobile full screen
-}
-
-type Action =
-    | { type: "PLAY_TRACK"; payload: Track }
-    | { type: "TOGGLE_PLAY_PAUSE" }
-    | { type: "SET_IS_PLAYING"; payload: boolean }
-    | { type: "SET_VOLUME"; payload: number }
-    | { type: "TOGGLE_EXPAND" }
-    | { type: "ADD_TO_QUEUE"; payload: Track }
-    | { type: "SET_QUEUE"; payload: Track[] }
-    | { type: "NEXT_TRACK" }
-    | { type: "PREV_TRACK" }
-    | { type: "STOP_PLAYER" };
+import { Track, PlayerState, Action } from "@/types/player";
 
 const initialState: PlayerState = {
     currentTrack: null,
@@ -116,7 +85,7 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
     }
 }
 
-const PlayerContext = createContext<{
+export const PlayerContext = createContext<{
     state: PlayerState;
     dispatch: React.Dispatch<Action>;
 } | null>(null);
@@ -131,10 +100,4 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     );
 }
 
-export function usePlayer() {
-    const context = useContext(PlayerContext);
-    if (!context) {
-        throw new Error("usePlayer must be used within a PlayerProvider");
-    }
-    return context;
-}
+

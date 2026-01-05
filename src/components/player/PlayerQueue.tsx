@@ -1,6 +1,7 @@
 "use client";
 
-import { usePlayer, Track } from "@/context/PlayerContext";
+import { usePlayer } from "@/hooks/usePlayer";
+import { Track } from "@/types/player";
 import { formatTime } from "@/lib/utils";
 
 export default function PlayerQueue() {
@@ -45,8 +46,8 @@ export default function PlayerQueue() {
                         <div
                             key={`${track.id}-${index}`}
                             className={`group flex items-center gap-3 p-2 rounded-lg transition-colors ${isCurrent
-                                    ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30"
-                                    : "hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
+                                ? "bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30"
+                                : "hover:bg-slate-50 dark:hover:bg-slate-800 border border-transparent"
                                 }`}
                         >
                             <button

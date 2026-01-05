@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import PlayButton from "@/components/player/PlayButton";
-import { Track } from "@/context/PlayerContext";
+import { Track } from "@/types/player";
 import { useLeanMode } from "@/context/LeanModeContext";
 
 interface TimelineRecording {
