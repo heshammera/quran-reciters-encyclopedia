@@ -181,7 +181,7 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                             </ul>
                                         ) : (
                                             <p className="text-sm">
-                                                <span className="font-bold text-slate-700 dark:text-slate-300">نطاق الآيات:</span> {recording.ayah_start} - {recording.ayah_end}
+                                                <span className="font-bold text-slate-700 dark:text-slate-300">محتوى التسجيل:</span> سورة {getSurahName(recording.surah_number)} (الآيات {recording.ayah_start} - {recording.ayah_end})
                                             </p>
                                         )}
                                     </div>
@@ -216,10 +216,18 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                         )}
                                                     </div>
                                                     <div>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 rounded">
+                                                                سورة {getSurahName(sim.surah_number)} ({sim.ayah_start} - {sim.ayah_end})
+                                                            </span>
+                                                            <span className="text-xs text-slate-500 dark:text-slate-300">
+                                                                {sim.section?.name_ar}
+                                                            </span>
+                                                        </div>
                                                         <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
                                                             الشيخ {sim.reciter?.name_ar}
                                                         </h3>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                                             {sim.city} {sim.recording_date?.year ? `(${sim.recording_date.year})` : ''}
                                                         </p>
                                                     </div>

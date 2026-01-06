@@ -12,6 +12,7 @@ import ReciterProfileHeader from "@/components/reciters/ReciterProfileHeader";
 import ReciterTimeline from "../../../components/reciters/ReciterTimeline";
 import ReciterVideos from "@/components/reciters/ReciterVideos"; // Imported
 import { SURAHS } from "@/lib/quran/metadata";
+import { getSurahName } from "@/lib/quran-helpers";
 
 interface ReciterPageProps {
     params: Promise<{
@@ -133,7 +134,7 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                                 <ReciterTimeline
                                     recordings={timelineData.map((t: any) => ({
                                         id: t.id,
-                                        title: t.title || (t.surah_number ? `سورة ${SURAHS.find(s => s.number === t.surah_number)?.name || t.surah_number}` : 'تسجيل عام'),
+                                        title: t.title || (t.surah_number ? `سورة ${getSurahName(t.surah_number)}` : 'تسجيل عام'),
                                         surah_number: t.surah_number,
                                         ayah_start: t.ayah_start,
                                         ayah_end: t.ayah_end,

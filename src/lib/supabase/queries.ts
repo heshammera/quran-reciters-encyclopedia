@@ -153,6 +153,7 @@ export async function getSimilarRecordings(recordingId: string, surahNumber: num
         .eq("surah_number", surahNumber)
         .neq("id", recordingId)
         .eq("is_published", true)
+        .order("created_at", { ascending: false })
         .limit(limit);
 
     return data || [];
