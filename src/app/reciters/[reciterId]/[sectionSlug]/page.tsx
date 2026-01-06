@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getReciter, getSection, getRecordings, getReciterPhases } from "@/lib/supabase/queries";
 import PhaseFilter from "@/components/reciters/PhaseFilter";
 import PlayButton from "@/components/player/PlayButton";
+import QueueButton from "@/components/player/QueueButton";
 import AutoPlayer from "@/components/player/AutoPlayer";
 import VideoModal from "@/components/player/VideoModal";
 import { Track } from "@/types/player";
@@ -84,11 +85,20 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                 <span className="text-slate-900 dark:text-white font-bold">{section.name_ar}</span>
             </div>
 
-            <div className="mb-8">
-                <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{section.name_ar}</h1>
-                <p className="text-slate-600 dark:text-slate-400">
-                    تلاوات القارئ {reciter.name_ar}
-                </p>
+            <div className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{section.name_ar}</h1>
+                    <p className="text-slate-600 dark:text-slate-400">
+                        تلاوات القارئ {reciter.name_ar}
+                    </p>
+                </div>
+                <div className="shrink-0">
+                    <QueueButton
+                        tracks={queueTracks}
+                        label="إضافة القسم كاملاً للقائمة"
+                        variant="solid"
+                    />
+                </div>
             </div>
 
             {/* AutoPlayer for Assistant Links */}
@@ -132,7 +142,10 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                                             </svg>
                                         </button>
                                     ) : (
-                                        <PlayButton track={track!} contextTracks={queueTracks} />
+                                        <div className="flex items-center gap-2">
+                                            <PlayButton track={track!} contextTracks={queueTracks} size="sm" />
+                                            <QueueButton track={track!} variant="ghost" size="sm" />
+                                        </div>
                                     )}
 
                                     {/* Info */}

@@ -140,7 +140,9 @@ export default function AudioPlayer() {
             {/* Queue UI Popup */}
             {showQueue && (
                 <div className="container mx-auto px-4 relative">
-                    <PlayerQueue />
+                    <div className="absolute bottom-0 right-0 left-0">
+                        <PlayerQueue />
+                    </div>
                 </div>
             )}
 

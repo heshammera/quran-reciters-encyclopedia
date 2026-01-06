@@ -26,6 +26,8 @@ export type Action =
     | { type: "TOGGLE_EXPAND" }
     | { type: "ADD_TO_QUEUE"; payload: Track }
     | { type: "SET_QUEUE"; payload: Track[] }
+    | { type: "CLEAR_QUEUE" }
+    | { type: "REMOVE_FROM_QUEUE"; payload: number }
     | { type: "NEXT_TRACK" }
     | { type: "PREV_TRACK" }
     | { type: "STOP_PLAYER" };

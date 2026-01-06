@@ -7,6 +7,10 @@ interface PlayerHook {
     dispatch: React.Dispatch<Action>;
     playTrack: (track: Track) => void;
     setQueue: (tracks: Track[]) => void;
+    addToQueue: (track: Track) => void;
+    addTracksToQueue: (tracks: Track[]) => void;
+    clearQueue: () => void;
+    removeFromQueue: (index: number) => void;
 }
 
 export function usePlayer(): PlayerHook {
@@ -26,5 +30,22 @@ export function usePlayer(): PlayerHook {
         dispatch({ type: "SET_QUEUE", payload: tracks });
     };
 
-    return { state, dispatch, playTrack, setQueue };
+    const addToQueue = (track: Track) => {
+        dispatch({ type: "ADD_TO_QUEUE", payload: track });
+    };
+
+    const addTracksToQueue = (tracks: Track[]) => {
+        const currentQueue = state.queue;
+        dispatch({ type: "SET_QUEUE", payload: [...currentQueue, ...tracks] });
+    };
+
+    const clearQueue = () => {
+        dispatch({ type: "CLEAR_QUEUE" });
+    };
+
+    const removeFromQueue = (index: number) => {
+        dispatch({ type: "REMOVE_FROM_QUEUE", payload: index });
+    };
+
+    return { state, dispatch, playTrack, setQueue, addToQueue, addTracksToQueue, clearQueue, removeFromQueue };
 }

@@ -51,6 +51,18 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 ...state,
                 queue: action.payload,
             };
+        case "CLEAR_QUEUE":
+            return {
+                ...state,
+                queue: []
+            };
+        case "REMOVE_FROM_QUEUE":
+            const filteredQueue = [...state.queue];
+            filteredQueue.splice(action.payload, 1);
+            return {
+                ...state,
+                queue: filteredQueue
+            };
         case "NEXT_TRACK":
             // Logic to move to next track would normally require knowing the index.
             // For simplicity, we assume the queue logic is handled by the component or we shift here.

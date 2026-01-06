@@ -4,6 +4,7 @@ import Link from "next/link";
 import { getRecording, getSimilarRecordings } from "@/lib/supabase/queries";
 import { formatTime } from "@/lib/utils";
 import PlayButton from "@/components/player/PlayButton";
+import QueueButton from "@/components/player/QueueButton";
 import { Metadata } from "next";
 import { getSurahName } from "@/lib/quran-helpers";
 
@@ -48,10 +49,24 @@ import CitationExport from "@/components/recordings/CitationExport";
 export default async function RecordingPage({ params }: RecordingPageProps) {
     const { id } = await params;
     const recording = await getRecording(id);
+    if (!recording) notFound();
 
-    if (!recording) {
-        notFound();
-    }
+    // Fetch context tracks (all recordings in the same section for the same reciter)
+    const { getRecordings } = await import("@/lib/supabase/queries");
+    const sectionRecordings = await getRecordings(recording.reciter_id, recording.section_id);
+
+    // Transform to Track format
+    const contextTracks = sectionRecordings.map((rec: any) => ({
+        id: rec.id,
+        title: rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام'),
+        reciterName: recording.reciter.name_ar,
+        src: rec.media_files?.[0]?.archive_url || "",
+        surahNumber: rec.surah_number,
+        ayahStart: rec.ayah_start,
+        ayahEnd: rec.ayah_end,
+        reciterId: recording.reciter.id,
+        sectionSlug: recording.section.slug,
+    })).filter(t => t.src);
 
     const similarRecordings = await getSimilarRecordings(recording.id, recording.surah_number);
 
@@ -59,8 +74,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
     let displayTitle = recording.title;
     if (!displayTitle) {
         if (recording.recording_coverage && recording.recording_coverage.length > 1) {
-            const surahNames = recording.recording_coverage
-                .map((seg: any) => getSurahName(seg.surah_number))
+            const uniqueSurahs = Array.from(new Set(recording.recording_coverage.map((seg: any) => seg.surah_number)));
+            const surahNames = uniqueSurahs
+                .map((num: any) => getSurahName(num))
                 .join(" و");
             displayTitle = `سورة ${surahNames}`;
         } else {
@@ -69,13 +85,25 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
         }
     }
 
+    // Sort coverage segments if they exist for better display
+    if (recording.recording_coverage) {
+        recording.recording_coverage.sort((a: any, b: any) => {
+            if (a.surah_number !== b.surah_number) return a.surah_number - b.surah_number;
+            return a.ayah_start - b.ayah_start;
+        });
+    }
+
+    const isVideo = recording.type === 'video';
+
     // Construct track object for player
     const track = {
         id: recording.id,
         title: displayTitle,
         reciterName: recording.reciter.name_ar,
         src: recording.media_files?.find((m: any) => m.media_type === 'audio')?.archive_url || '',
-        duration: recording.duration_seconds
+        duration: recording.duration_seconds,
+        isVideo: isVideo,
+        videoUrl: recording.video_url,
     };
 
     return (
@@ -134,9 +162,24 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                 )}
                             </div>
 
-                            {/* Play Button */}
-                            <div className="pt-4 flex justify-center md:justify-start">
-                                <PlayButton track={track} />
+                            {/* Play & Queue Actions */}
+                            <div className="pt-4 flex flex-wrap justify-center md:justify-start gap-3">
+                                {isVideo ? (
+                                    <a
+                                        href="#video-player"
+                                        className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 transition-all transform hover:-translate-y-0.5"
+                                    >
+                                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                        مشاهدة الفيديو
+                                    </a>
+                                ) : (
+                                    <>
+                                        <PlayButton track={track} contextTracks={contextTracks} size="lg" />
+                                        <QueueButton track={track} label="إضافة للقائمة" variant="solid" />
+                                    </>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -147,6 +190,42 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
+                        {/* Video Player if applicable */}
+                        {isVideo && recording.video_url && (
+                            <div id="video-player" className="bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 aspect-video">
+                                {(() => {
+                                    const url = recording.video_url;
+                                    const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+                                    const isArchive = url.includes('archive.org');
+
+                                    if (isYoutube) {
+                                        const videoId = url.match(/v=([^&]+)/)?.[1] || url.split('/').pop();
+                                        return (
+                                            <iframe
+                                                src={`https://www.youtube.com/embed/${videoId}?rel=0`}
+                                                className="w-full h-full"
+                                                allowFullScreen
+                                            ></iframe>
+                                        );
+                                    } else if (isArchive) {
+                                        const identifier = url.match(/(details|download)\/([^\/\?\#&]+)/)?.[2];
+                                        return (
+                                            <iframe
+                                                src={`https://archive.org/embed/${identifier}`}
+                                                className="w-full h-full"
+                                                allowFullScreen
+                                            ></iframe>
+                                        );
+                                    } else if (/\.(mp4|webm|ogv)$/i.test(url)) {
+                                        return (
+                                            <video src={url} controls className="w-full h-full" poster={recording.video_thumbnail} />
+                                        );
+                                    }
+                                    return <div className="flex items-center justify-center h-full text-white">رابط الفيديو غير مدعوم للمعالجة المباشرة</div>;
+                                })()}
+                            </div>
+                        )}
+
                         {/* Description / Notes */}
                         {(recording.source_description || recording.quality_level || recording.archival_id) && (
                             <div className="bg-white dark:bg-slate-800 rounded-2xl p-8 shadow-sm border border-slate-100 dark:border-slate-700/50">
@@ -180,8 +259,8 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                 ))}
                                             </ul>
                                         ) : (
-                                            <p className="text-sm">
-                                                <span className="font-bold text-slate-700 dark:text-slate-300">محتوى التسجيل:</span> سورة {getSurahName(recording.surah_number)} (الآيات {recording.ayah_start} - {recording.ayah_end})
+                                            <p className="text-base text-slate-700 dark:text-slate-300">
+                                                سورة {getSurahName(recording.surah_number)} (الآيات {recording.ayah_start} - {recording.ayah_end})
                                             </p>
                                         )}
                                     </div>
@@ -224,9 +303,50 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                                 {sim.section?.name_ar}
                                                             </span>
                                                         </div>
-                                                        <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
-                                                            الشيخ {sim.reciter?.name_ar}
-                                                        </h3>
+                                                        <div className="flex flex-col gap-2">
+                                                            <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
+                                                                الشيخ {sim.reciter?.name_ar}
+                                                            </h3>
+                                                            <div className="flex items-center gap-2">
+                                                                {sim.type === 'video' ? (
+                                                                    <Link
+                                                                        href={`/recordings/${sim.id}`}
+                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-colors"
+                                                                    >
+                                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                                                            <path d="M8 5v14l11-7z" />
+                                                                        </svg>
+                                                                        مشاهدة
+                                                                    </Link>
+                                                                ) : (
+                                                                    <>
+                                                                        <PlayButton
+                                                                            track={{
+                                                                                id: sim.id,
+                                                                                title: sim.title || `سورة ${getSurahName(sim.surah_number)}`,
+                                                                                reciterName: sim.reciter.name_ar,
+                                                                                src: sim.media_files?.[0]?.archive_url || "",
+                                                                                surahNumber: sim.surah_number,
+                                                                                reciterId: sim.reciter.id,
+                                                                            }}
+                                                                            size="sm"
+                                                                        />
+                                                                        <QueueButton
+                                                                            variant="ghost"
+                                                                            size="sm"
+                                                                            track={{
+                                                                                id: sim.id,
+                                                                                title: sim.title || `سورة ${getSurahName(sim.surah_number)}`,
+                                                                                reciterName: sim.reciter.name_ar,
+                                                                                src: sim.media_files?.[0]?.archive_url || "",
+                                                                                surahNumber: sim.surah_number,
+                                                                                reciterId: sim.reciter.id,
+                                                                            }}
+                                                                        />
+                                                                    </>
+                                                                )}
+                                                            </div>
+                                                        </div>
                                                         <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
                                                             {sim.city} {sim.recording_date?.year ? `(${sim.recording_date.year})` : ''}
                                                         </p>

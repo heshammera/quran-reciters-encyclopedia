@@ -26,8 +26,15 @@ export default function VideoForm({ reciters, sections, phases = [], initialData
         reciter_id: initialData?.reciter_id || "",
         section_id: initialData?.section_id || "",
         surah_number: initialData?.surah_number || 1,
+        ayah_start: initialData?.ayah_start || 1,
+        ayah_end: initialData?.ayah_end || 1,
         city: initialData?.city || "",
+        time_period: initialData?.recording_date?.year ? String(initialData.recording_date.year) : (initialData?.recording_date?.time_period || "غير محدد"),
         quality_level: initialData?.quality_level || "",
+        rarity_classification: initialData?.rarity_classification || "common",
+        source_description: initialData?.source_description || "",
+        is_published: initialData?.is_published ?? true,
+        is_featured: initialData?.is_featured ?? false,
     });
 
     const [videoMeta, setVideoMeta] = useState<{ id: string; thumb: string; source: 'youtube' | 'archive' } | null>(
@@ -91,21 +98,22 @@ export default function VideoForm({ reciters, sections, phases = [], initialData
                 reciter_id: formData.reciter_id,
                 section_id: formData.section_id,
                 surah_number: Number(formData.surah_number),
+                ayah_start: Number(formData.ayah_start),
+                ayah_end: Number(formData.ayah_end),
                 city: formData.city,
+                recording_date: {
+                    year: parseInt(formData.time_period) || null,
+                    time_period: formData.time_period
+                },
+                quality_level: formData.quality_level,
+                rarity_classification: formData.rarity_classification,
+                source_description: formData.source_description,
+                is_published: formData.is_published,
+                is_featured: formData.is_featured,
+                reliability_level: 'verified', // Default for video
+                duration_seconds: 60, // Mock duration
+                archival_id: initialData?.archival_id || `VID-${videoMeta.id}-${Date.now()}`,
             };
-
-            // Only add defaults for new recordings
-            if (!isEdit) {
-                payload.archival_id = `VID-${videoMeta.id}-${Date.now()}`;
-                payload.recording_date = { year: new Date().getFullYear(), approximate: false };
-                payload.duration_seconds = 60;
-                payload.source_description = videoMeta.source === 'youtube' ? 'YouTube Video' : 'Archive.org Video';
-                payload.reliability_level = 'verified';
-                payload.rarity_classification = 'common';
-                payload.is_published = true;
-                payload.ayah_start = 1;
-                payload.ayah_end = 999;
-            }
 
             let query = supabase.from('recordings');
 
@@ -215,21 +223,88 @@ export default function VideoForm({ reciters, sections, phases = [], initialData
                     </select>
                 </div>
 
-                {/* City */}
+                {/* Ayah Range */}
+                <div className="flex gap-4">
+                    <div className="flex-1">
+                        <label className="block text-sm font-medium mb-2">من آية</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={formData.ayah_start}
+                            onChange={(e) => setFormData({ ...formData, ayah_start: Number(e.target.value) })}
+                            className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        />
+                    </div>
+                    <div className="flex-1">
+                        <label className="block text-sm font-medium mb-2">إلى آية</label>
+                        <input
+                            type="number"
+                            min="1"
+                            value={formData.ayah_end}
+                            onChange={(e) => setFormData({ ...formData, ayah_end: Number(e.target.value) })}
+                            className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        />
+                    </div>
+                </div>
+
+                {/* Year/Period */}
                 <div>
-                    <label className="block text-sm font-medium mb-2">المدينة (اختياري)</label>
+                    <label className="block text-sm font-medium mb-2">السنة / الفترة</label>
                     <input
                         type="text"
-                        value={formData.city}
-                        onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                        placeholder="مثال: 1405 أو 1985"
+                        value={formData.time_period}
+                        onChange={(e) => setFormData({ ...formData, time_period: e.target.value })}
                         className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
-                        list="cities-list"
                     />
-                    <datalist id="cities-list">
-                        {cities.map((c) => (
-                            <option key={c.name} value={c.name} />
-                        ))}
-                    </datalist>
+                </div>
+
+                {/* Rarity */}
+                <div>
+                    <label className="block text-sm font-medium mb-2">تصنيف الندرة</label>
+                    <select
+                        value={formData.rarity_classification}
+                        onChange={(e) => setFormData({ ...formData, rarity_classification: e.target.value })}
+                        className="w-full p-2.5 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                    >
+                        <option value="common">عادي</option>
+                        <option value="rare">نادر</option>
+                        <option value="very_rare">نادر جداً (نوادر)</option>
+                    </select>
+                </div>
+
+                {/* Description */}
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-medium mb-2">وصف أو ملاحظات</label>
+                    <textarea
+                        rows={3}
+                        value={formData.source_description}
+                        onChange={(e) => setFormData({ ...formData, source_description: e.target.value })}
+                        className="w-full p-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900"
+                        placeholder="أدخل أي تفاصيل إضافية حول التسجيل..."
+                    />
+                </div>
+
+                {/* Toggles */}
+                <div className="md:col-span-2 flex gap-8 p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg border border-slate-100 dark:border-slate-700">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={formData.is_published}
+                            onChange={(e) => setFormData({ ...formData, is_published: e.target.checked })}
+                            className="w-5 h-5 accent-emerald-600"
+                        />
+                        <span className="text-sm font-bold">نشر الفيديو</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={formData.is_featured}
+                            onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
+                            className="w-5 h-5 accent-emerald-600"
+                        />
+                        <span className="text-sm font-bold">تمييز (Featured)</span>
+                    </label>
                 </div>
             </div>
 

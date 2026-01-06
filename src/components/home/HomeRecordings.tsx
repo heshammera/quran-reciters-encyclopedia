@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useLeanMode } from "@/context/LeanModeContext";
 import { SURAHS } from "@/lib/quran/metadata";
 import { getSurahName } from "@/lib/quran-helpers";
+import QueueButton from "@/components/player/QueueButton";
 
 export default function HomeRecordings({ featured, latest }: { featured: any[], latest: any[] }) {
     const { isLean } = useLeanMode();
@@ -29,13 +30,28 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                         📜
                                     </div>
                                 )}
-                                <div className="flex-1 min-w-0">
-                                    <p className={`font-bold text-slate-900 dark:text-white transition-colors truncate ${isLean ? 'text-sm group-active:text-emerald-600' : 'group-hover:text-emerald-600'}`}>
-                                        {recording.reciters?.name_ar}
-                                    </p>
-                                    <p className="text-xs text-slate-500 truncate">
-                                        {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')} {recording.city && `• ${recording.city}`}
-                                    </p>
+                                <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                                    <div>
+                                        <p className={`font-bold text-slate-900 dark:text-white transition-colors truncate ${isLean ? 'text-sm group-active:text-emerald-600' : 'group-hover:text-emerald-600'}`}>
+                                            {recording.reciters?.name_ar}
+                                        </p>
+                                        <p className="text-xs text-slate-500 truncate">
+                                            {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')} {recording.city && `• ${recording.city}`}
+                                        </p>
+                                    </div>
+                                    <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <QueueButton
+                                            variant="icon"
+                                            track={{
+                                                id: recording.id,
+                                                title: recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام'),
+                                                reciterName: recording.reciters?.name_ar,
+                                                src: recording.media_files?.[0]?.archive_url || "",
+                                                surahNumber: recording.surah_number,
+                                                reciterId: recording.reciters?.id,
+                                            }}
+                                        />
+                                    </div>
                                 </div>
                             </div>
                         </Link>
@@ -65,13 +81,29 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                 }`}>
                                 {recording.surah_number ? getSurahName(recording.surah_number) : "🔊"}
                             </div>
-                            <div className="flex-1 min-w-0">
-                                <p className={`font-bold text-slate-800 dark:text-slate-200 truncate ${isLean ? 'text-xs' : 'text-sm'}`}>
-                                    {recording.reciters?.name_ar}
-                                </p>
-                                <p className="text-xs text-slate-500 truncate">
-                                    {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : (recording.sections?.name_ar || 'تلاوة'))}
-                                </p>
+                            <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
+                                <div>
+                                    <p className={`font-bold text-slate-800 dark:text-slate-200 truncate ${isLean ? 'text-xs' : 'text-sm'}`}>
+                                        {recording.reciters?.name_ar}
+                                    </p>
+                                    <p className="text-xs text-slate-500 truncate">
+                                        {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : (recording.sections?.name_ar || 'تلاوة'))}
+                                    </p>
+                                </div>
+                                <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <QueueButton
+                                        variant="icon"
+                                        size="sm"
+                                        track={{
+                                            id: recording.id,
+                                            title: recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام'),
+                                            reciterName: recording.reciters?.name_ar,
+                                            src: recording.media_files?.[0]?.archive_url || "",
+                                            surahNumber: recording.surah_number,
+                                            reciterId: recording.reciters?.id,
+                                        }}
+                                    />
+                                </div>
                             </div>
                         </Link>
                     ))}
