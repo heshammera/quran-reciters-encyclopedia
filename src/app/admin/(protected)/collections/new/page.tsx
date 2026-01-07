@@ -2,6 +2,8 @@
 import CollectionForm from "@/components/admin/CollectionForm";
 import Link from "next/link";
 
+import { Suspense } from "react";
+
 export default function NewCollectionPage() {
     return (
         <div className="max-w-2xl mx-auto space-y-6">
@@ -21,7 +23,9 @@ export default function NewCollectionPage() {
                 </div>
             </div>
 
-            <CollectionForm />
+            <Suspense fallback={<div>جاري التحميل...</div>}>
+                <CollectionForm />
+            </Suspense>
         </div>
     );
 }

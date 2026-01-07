@@ -1,6 +1,7 @@
 'use client';
 
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { PlayerProvider } from "@/context/PlayerContext";
 import AudioPlayer from "@/components/player/AudioPlayer";
@@ -11,6 +12,7 @@ import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
 import WelcomePopup from "@/components/layout/WelcomePopup";
 import DonationBanner from "@/components/donation/DonationBanner";
+import SplashScreen from "@/components/ui/SplashScreen";
 import { usePathname } from "next/navigation";
 
 export default function RootLayout({
@@ -44,6 +46,9 @@ export default function RootLayout({
         }} />
       </head>
       <body className="antialiased font-sans transition-colors duration-300 bg-background text-foreground">
+        <Suspense fallback={null}>
+          <SplashScreen />
+        </Suspense>
         {!isAdmin && <DonationBanner />}
         <LeanModeProvider>
           <PlayerProvider>
