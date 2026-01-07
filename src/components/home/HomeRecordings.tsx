@@ -83,10 +83,10 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                             </div>
                             <div className="flex-1 min-w-0 flex items-center justify-between gap-2">
                                 <div>
-                                    <p className={`font-bold text-slate-800 dark:text-slate-200 truncate ${isLean ? 'text-xs' : 'text-sm'}`}>
+                                    <p className={`font-bold text-slate-800 dark:text-slate-200 line-clamp-2 ${isLean ? 'text-xs' : 'text-sm'}`}>
                                         {recording.reciters?.name_ar}
                                     </p>
-                                    <p className="text-xs text-slate-500 truncate">
+                                    <p className="text-xs text-slate-500 line-clamp-2">
                                         {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : (recording.sections?.name_ar || 'تلاوة'))}
                                     </p>
                                 </div>

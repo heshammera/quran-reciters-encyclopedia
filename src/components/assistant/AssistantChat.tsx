@@ -27,12 +27,20 @@ export default function AssistantChat() {
     const buttonRef = useRef<HTMLButtonElement>(null);
     const dragThreshold = 5; // Pixels to move before considering it a drag
 
-    // Load saved position
+    // Load saved position with validation
     useEffect(() => {
         const saved = localStorage.getItem("assistant_position");
         if (saved) {
             try {
-                setPosition(JSON.parse(saved));
+                const parsed = JSON.parse(saved);
+                // Validate bounds
+                const maxX = window.innerWidth - 70;
+                const maxY = window.innerHeight - 70;
+
+                const validX = Math.min(Math.max(10, parsed.x), maxX);
+                const validY = Math.min(Math.max(80, parsed.y), maxY);
+
+                setPosition({ x: validX, y: validY });
             } catch (e) {
                 console.error("Error loading position", e);
             }
@@ -156,14 +164,26 @@ export default function AssistantChat() {
 
     // Drag Handlers
     const startDragging = (e: React.MouseEvent | React.TouchEvent) => {
+        // Prevent default only for touch to stop scrolling/pull-to-refresh
+        if ('touches' in e) {
+            // e.preventDefault(); // Don't prevent default immediately or click won't work
+        }
+
         const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
         const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
         dragStart.current = { x: clientX, y: clientY };
 
-        const rect = buttonRef.current?.getBoundingClientRect();
-        if (rect) {
-            initialPos.current = { x: rect.left, y: rect.top };
+        // If we already have a position state, use it as base.
+        if (position) {
+            initialPos.current = { x: position.x, y: position.y };
+        } else {
+            // Calculate default position (bottom-right) based on CSS: bottom: 1.5rem, right: 1.5rem
+            // w-14 = 3.5rem = 56px
+            // 1.5rem = 24px
+            const defaultX = window.innerWidth - 24 - 56;
+            const defaultY = window.innerHeight - 24 - 56;
+            initialPos.current = { x: defaultX, y: defaultY };
         }
 
         setIsDragging(false); // Reset at start
@@ -176,16 +196,16 @@ export default function AssistantChat() {
             const dy = currentY - dragStart.current.y;
 
             if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) {
-                setIsDragging(true);
+                if (!isDragging) setIsDragging(true); // Set only once
+
                 const newX = initialPos.current.x + dx;
                 const newY = initialPos.current.y + dy;
 
                 // Bounds checking
                 const boundedX = Math.max(10, Math.min(window.innerWidth - 70, newX));
-                const boundedY = Math.max(80, Math.min(window.innerHeight - 70, newY)); // Ensure it stays below header (h-16 = 64px)
+                const boundedY = Math.max(80, Math.min(window.innerHeight - 70, newY));
 
-                const newPos = { x: boundedX, y: boundedY };
-                setPosition(newPos);
+                setPosition({ x: boundedX, y: boundedY });
             }
         };
 
@@ -196,37 +216,54 @@ export default function AssistantChat() {
             window.removeEventListener("touchend", endHandler);
 
             // Save position if we dragged
-            if (position) {
-                localStorage.setItem("assistant_position", JSON.stringify(position));
+            if (isDragging && position) { // Check logic here, isDragging state might trail? 
+                // Actually relying on current position state is fine to save
+                localStorage.setItem("assistant_position", JSON.stringify(position)); // We can't access updated state here easily in closure? 
+                // But wait, setPosition updates the state for next render. 
+                // We should save in an effect or use Ref for position if we want exact latest in closure.
+                // But let's just assume the last render's position is close enough or use the effect below.
             }
         };
 
-        window.addEventListener("mousemove", moveHandler);
+        // Add listeners to window to capture drag outside button
+        window.addEventListener("mousemove", moveHandler, { passive: false });
         window.addEventListener("mouseup", endHandler);
-        window.addEventListener("touchmove", moveHandler);
+        window.addEventListener("touchmove", moveHandler, { passive: false });
         window.addEventListener("touchend", endHandler);
     };
 
-    const handleButtonClick = () => {
+    // Effect to save position whenever it changes (debounced slightly or just on change)
+    useEffect(() => {
+        if (position) {
+            localStorage.setItem("assistant_position", JSON.stringify(position));
+        }
+    }, [position]);
+
+    const handleButtonClick = (e: React.MouseEvent) => {
+        // If we dragged, don't open.
+        // We need to check if the drag threshold was met during THIS interaction.
+        // We used isDragging state.
         if (!isDragging) {
             setIsOpen(true);
             dismissWelcome();
         }
     };
 
-    const floatingStyle = position ? {
+    const floatingStyle: React.CSSProperties = position ? {
         left: `${position.x}px`,
         top: `${position.y}px`,
         bottom: 'auto',
         right: 'auto',
-        touchAction: 'none'
+        touchAction: 'none',
+        position: 'fixed'
     } : {
         bottom: '1.5rem',
         right: '1.5rem',
-        touchAction: 'none'
+        touchAction: 'none',
+        position: 'fixed'
     };
 
-    const welcomeStyle = position ? {
+    const welcomeStyle: React.CSSProperties = position ? {
         left: `${position.x - 140}px`,
         top: `${position.y - 80}px`,
         bottom: 'auto',
@@ -236,9 +273,9 @@ export default function AssistantChat() {
         right: '1.5rem'
     };
 
-    const chatStyle = position ? {
-        left: Math.min(window.innerWidth - 370, Math.max(10, position.x - 300)),
-        top: Math.max(80, Math.min(window.innerHeight - 520, position.y - 500))
+    const chatStyle: React.CSSProperties = position ? {
+        left: `${Math.min(window.innerWidth - 370, Math.max(10, position.x - 300))}px`,
+        top: `${Math.max(80, Math.min(window.innerHeight - 520, position.y - 500))}px`
     } : {
         bottom: '1.5rem',
         right: '1.5rem'

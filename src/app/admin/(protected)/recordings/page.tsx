@@ -23,7 +23,8 @@ export default async function RecordingsList({
         .select(`
       *,
       reciters (name_ar),
-      sections (name_ar)
+      sections (name_ar),
+      recording_coverage(*)
     `)
         .eq('type', 'audio') // Main filter for Audio Library
         .order("created_at", { ascending: false });
@@ -99,7 +100,7 @@ export default async function RecordingsList({
                             <div className="flex justify-between items-start mb-3">
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white">
-                                        سورة {SURAHS.find(s => s.number === rec.surah_number)?.name || rec.surah_number}
+                                        {rec.title || (rec.surah_number ? `سورة ${SURAHS.find(s => s.number === rec.surah_number)?.name}` : 'تسجيل عام')}
                                     </h3>
                                     <p className="text-sm text-slate-500 dark:text-slate-400">
                                         {rec.reciters?.name_ar}
@@ -127,7 +128,19 @@ export default async function RecordingsList({
                                     <span>المدينة:</span>
                                     <span>{rec.city || '-'}</span>
                                 </div>
-                                {rec.ayah_start && (
+                                {/* Multi-segment Coverage Display */}
+                                {rec.recording_coverage && rec.recording_coverage.length > 0 ? (
+                                    <div className="pt-2 border-t border-slate-100 dark:border-slate-700 mt-2">
+                                        <div className="text-xs text-slate-500 mb-1">المقاطع:</div>
+                                        <div className="flex flex-wrap gap-1">
+                                            {rec.recording_coverage.map((seg: any, idx: number) => (
+                                                <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-700 px-2 py-0.5 rounded">
+                                                    {SURAHS.find(s => s.number === seg.surah_number)?.name} ({seg.ayah_start}-{seg.ayah_end})
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : rec.ayah_start && (
                                     <div className="flex justify-between">
                                         <span>الآيات:</span>
                                         <span>{rec.ayah_start} - {rec.ayah_end}</span>
@@ -177,12 +190,22 @@ export default async function RecordingsList({
                                         </td>
                                         <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                                             <div className="font-medium text-slate-900 dark:text-white">
-                                                سورة {SURAHS.find(s => s.number === rec.surah_number)?.name || rec.surah_number}
-                                                <span className="text-xs text-slate-500 mx-1">
+                                                {rec.title || (rec.surah_number ? `سورة ${SURAHS.find(s => s.number === rec.surah_number)?.name}` : 'تسجيل عام')}
+                                            </div>
+                                            {rec.recording_coverage && rec.recording_coverage.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1 mt-1">
+                                                    {rec.recording_coverage.map((seg: any, idx: number) => (
+                                                        <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-700 px-1.5 py-0.5 rounded">
+                                                            {SURAHS.find(s => s.number === seg.surah_number)?.name} ({seg.ayah_start}-{seg.ayah_end})
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-xs text-slate-500">
                                                     ({rec.ayah_start} - {rec.ayah_end})
                                                 </span>
-                                            </div>
-                                            <div className="text-xs mt-1">{rec.sections?.name_ar}</div>
+                                            )}
+                                            <div className="text-xs mt-1 text-emerald-600 dark:text-emerald-400">{rec.sections?.name_ar}</div>
                                         </td>
                                         <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">
                                             <div>{rec.city}</div>

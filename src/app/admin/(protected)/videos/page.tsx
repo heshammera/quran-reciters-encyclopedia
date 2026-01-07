@@ -13,7 +13,8 @@ export default async function VideosPage() {
         .select(`
             *,
             reciter:reciters(name_ar),
-            section:sections(name_ar)
+            section:sections(name_ar),
+            recording_coverage(*)
         `)
         .eq('type', 'video')
         .order('created_at', { ascending: false });
@@ -43,8 +44,6 @@ export default async function VideosPage() {
             {/* Video Grid (Mobile Friendly) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {videos?.map((video) => {
-                    const surahName = SURAHS.find(s => s.number === video.surah_number)?.name || video.surah_number;
-
                     return (
                         <div key={video.id} className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm border border-slate-200 dark:border-slate-700 hover:shadow-md transition-shadow group">
                             {/* Thumbnail */}
@@ -68,13 +67,29 @@ export default async function VideosPage() {
                             {/* Info */}
                             <div className="p-4">
                                 <h3 className="font-bold text-slate-900 dark:text-white mb-1 truncate">
-                                    سورة {surahName}
+                                    {video.title || (video.surah_number ? `سورة ${SURAHS.find(s => s.number === video.surah_number)?.name}` : 'فيديو عام')}
                                 </h3>
+
+                                {/* Multi-segment display */}
+                                {video.recording_coverage && video.recording_coverage.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1 mb-2">
+                                        {video.recording_coverage.map((seg: any, idx: number) => (
+                                            <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-700/50 px-1.5 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                                                {SURAHS.find(s => s.number === seg.surah_number)?.name} ({seg.ayah_start}-{seg.ayah_end})
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="text-xs text-slate-500 mb-2">
+                                        آيات ({video.ayah_start}-{video.ayah_end})
+                                    </div>
+                                )}
+
                                 <p className="text-sm text-emerald-600 dark:text-emerald-400 mb-3">
                                     {video.section?.name_ar}
                                 </p>
 
-                                <div className="flex items-center justify-between text-xs text-slate-500">
+                                <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-700 pt-3">
                                     <span>{new Date(video.created_at).toLocaleDateString('ar-EG')}</span>
                                     <VideoCardActions videoId={video.id} />
                                 </div>

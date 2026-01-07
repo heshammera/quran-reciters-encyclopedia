@@ -233,24 +233,27 @@ export interface Database {
         Row: {
           id: string;
           recording_id: string;
-          start_ayah: number;
-          end_ayah: number;
+          surah_number: number;
+          ayah_start: number;
+          ayah_end: number;
           full_surah: boolean;
           created_at: string;
         };
         Insert: {
           id?: string;
           recording_id: string;
-          start_ayah: number;
-          end_ayah: number;
+          surah_number: number;
+          ayah_start: number;
+          ayah_end: number;
           full_surah?: boolean;
           created_at?: string;
         };
         Update: {
           id?: string;
           recording_id?: string;
-          start_ayah?: number;
-          end_ayah?: number;
+          surah_number?: number;
+          ayah_start?: number;
+          ayah_end?: number;
           full_surah?: boolean;
           created_at?: string;
         };

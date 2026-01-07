@@ -64,16 +64,16 @@ export async function checkDuplicateCoverage(reciterId: string, surahNumber: num
         .select(`
             recording_id,
             surah_number,
-            start_ayah,
-            end_ayah,
+            ayah_start,
+            ayah_end,
             recordings (
                 id,
                 reciter_id
             )
         `)
         .eq('surah_number', surahNumber)
-        .eq('start_ayah', fromAyah)
-        .eq('end_ayah', toAyah);
+        .eq('ayah_start', fromAyah)
+        .eq('ayah_end', toAyah);
 
     if (error) {
         console.error("Error checking duplicates:", JSON.stringify(error, null, 2));

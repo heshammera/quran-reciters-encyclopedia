@@ -99,6 +99,32 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
             // If editing and reciter is selected, fetch their phases
             if (initialData?.reciter_id) {
                 fetchPhases(initialData.reciter_id);
+            } else {
+                // If NEW recording, try to load from localStorage
+                const savedData = localStorage.getItem('lastRecordingData');
+                if (savedData) {
+                    try {
+                        const parsed = JSON.parse(savedData);
+                        setFormData(prev => ({
+                            ...prev,
+                            ...parsed,
+                            // Ensure we don't accidentally overwrite unique fields if they were somehow saved
+                            title: prev.title,
+                            duration_seconds: prev.duration_seconds,
+                            archive_url: prev.archive_url,
+                            surah_number: prev.surah_number, // Default 1
+                            ayah_start: prev.ayah_start, // Default 1
+                            ayah_end: prev.ayah_end // Default 1
+                        }));
+
+                        // If we restored a reciter, fetch their phases too
+                        if (parsed.reciter_id) {
+                            fetchPhases(parsed.reciter_id);
+                        }
+                    } catch (e) {
+                        console.error("Failed to load saved form data", e);
+                    }
+                }
             }
         }
         fetchData();
@@ -220,6 +246,11 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
 
             // Auto-fill logic
             const updates: any = {};
+
+            // ALWAYS Set Title from Filename (User wants this explicitly)
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+            updates.title = nameWithoutExt;
+
             if (metadata.format.duration) {
                 updates.duration_seconds = Math.round(metadata.format.duration);
             }
@@ -234,10 +265,12 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
 
             if (Object.keys(updates).length > 0) {
                 setFormData(prev => ({ ...prev, ...updates }));
-                // Show a small toast or log could go here
             }
         } catch (err) {
             console.warn("Failed to parse audio metadata:", err);
+            // Fallback: Use filename
+            const nameWithoutExt = file.name.replace(/\.[^/.]+$/, "");
+            setFormData(prev => ({ ...prev, title: nameWithoutExt }));
         }
 
         setUploading(true);
@@ -318,7 +351,31 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
             if (data.metadata) {
                 const updates: any = {};
                 if (data.metadata.year) updates.time_period = String(data.metadata.year);
-                if (data.metadata.title) updates.source_description = data.metadata.title;
+
+                // 1. Try to get filename from URL first (Most accurate for specific tracks)
+                let urlFilename = "";
+                try {
+                    const urlObj = new URL(formData.archive_url);
+                    const pathname = urlObj.pathname;
+                    if (pathname.split('/').length > 0) {
+                        const lastPart = pathname.split('/').pop(); // e.g. "01_Surah.mp3"
+                        if (lastPart && lastPart.includes('.')) {
+                            urlFilename = decodeURIComponent(lastPart).replace(/\.[^/.]+$/, "").replace(/_/g, " ");
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+
+                if (urlFilename) {
+                    updates.title = urlFilename;
+                } else if (data.metadata.title) {
+                    // Fallback to Archive Title if no filename in URL
+                    updates.title = data.metadata.title;
+                }
+
+                // Map Archive Title to Source Description (Album/Collection Name)
+                if (data.metadata.title && !formData.source_description) {
+                    updates.source_description = data.metadata.title;
+                }
 
                 // Try to find duration from files
                 if (data.files && Array.isArray(data.files)) {
@@ -503,14 +560,41 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
             }
 
             setSuccess(true);
+
+            // Save metadata for next recording
             if (!initialData) {
-                // Reset essential fields only
+                const dataToSave = {
+                    reciter_id: formData.reciter_id,
+                    section_id: formData.section_id,
+                    reciter_phase_id: formData.reciter_phase_id,
+                    city: formData.city,
+                    time_period: formData.time_period,
+                    source_description: formData.source_description,
+                    quality_level: formData.quality_level,
+                    reliability_level: formData.reliability_level,
+                    rarity_classification: formData.rarity_classification,
+                    is_published: formData.is_published,
+                    is_featured: formData.is_featured,
+                    // Note: title, surah, ayahs, url, duration are intentionally excluded
+                };
+                localStorage.setItem('lastRecordingData', JSON.stringify(dataToSave));
+            }
+
+            if (!initialData) {
+                // Reset essential content fields ONLY
                 setFormData(prev => ({
-                    ...prev,
-                    archive_url: "", archival_id: ""
+                    ...prev, // Keep the metadata we just saved (reciter, city, etc.)
+                    title: "", // Reset title
+                    archive_url: "",
+                    archival_id: "",
+                    duration_seconds: 0, // Reset duration
+                    time_period: prev.time_period // Keep year
                 }));
-                // Reset segments
+                // Reset segments to Fatihah (or keep 1 if user wants consistent flow? Let's reset to Fatihah for now)
                 setSegments([{ surah: 1, start: 1, end: 7 }]);
+
+                // Keep the success message for a bit longer or scroll top? 
+                // For now just letting the user see "Saved Successfully"
             }
 
         } catch (err: any) {
