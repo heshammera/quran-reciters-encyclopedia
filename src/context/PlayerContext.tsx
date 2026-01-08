@@ -42,6 +42,11 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 isExpanded: !state.isExpanded,
             };
         case "ADD_TO_QUEUE":
+            // Check if track already exists in queue
+            const trackExists = state.queue.some(track => track.id === action.payload.id);
+            if (trackExists) {
+                return state; // Don't add duplicate
+            }
             return {
                 ...state,
                 queue: [...state.queue, action.payload],

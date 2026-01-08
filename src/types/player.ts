@@ -16,6 +16,7 @@ export interface PlayerState {
     queue: Track[];
     volume: number;
     isExpanded: boolean;
+    sleepTimer: number | null; // بالدقائق
 }
 
 export type Action =

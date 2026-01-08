@@ -36,7 +36,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                             <p className={`font-bold text-slate-900 dark:text-white transition-colors leading-snug ${isLean ? 'text-sm group-active:text-emerald-600' : 'group-hover:text-emerald-600'}`}>
                                                 {recording.reciters?.name_ar}
                                             </p>
-                                            <p className="text-xs text-slate-500 leading-relaxed">
+                                            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                                                 {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')} {recording.city && `• ${recording.city}`}
                                             </p>
                                         </div>
@@ -88,7 +88,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                     <p className={`font-bold text-slate-800 dark:text-slate-200 line-clamp-2 ${isLean ? 'text-xs' : 'text-sm'}`}>
                                         {recording.reciters?.name_ar}
                                     </p>
-                                    <p className="text-xs text-slate-500 line-clamp-2">
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 line-clamp-2 font-medium">
                                         {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : (recording.sections?.name_ar || 'تلاوة'))}
                                     </p>
                                 </div>

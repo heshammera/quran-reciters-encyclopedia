@@ -2,7 +2,7 @@
 
 import { usePlayer } from "@/hooks/usePlayer";
 import { Track } from "@/types/player";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface QueueButtonProps {
     track?: Track;
@@ -13,12 +13,26 @@ interface QueueButtonProps {
 }
 
 export default function QueueButton({ track, tracks, variant = "outline", size = "md", label }: QueueButtonProps) {
-    const { addToQueue, addTracksToQueue } = usePlayer();
+    const { addToQueue, addTracksToQueue, state } = usePlayer();
     const [added, setAdded] = useState(false);
+    const [isInQueue, setIsInQueue] = useState(false);
+
+    // Check if track is already in queue
+    useEffect(() => {
+        if (track) {
+            const exists = state.queue.some(t => t.id === track.id);
+            setIsInQueue(exists);
+        }
+    }, [track, state.queue]);
 
     const handleAdd = (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
+
+        // If already in queue, don't add again
+        if (isInQueue) {
+            return;
+        }
 
         if (track) {
             addToQueue(track);
@@ -39,13 +53,23 @@ export default function QueueButton({ track, tracks, variant = "outline", size =
         solid: "bg-emerald-600 text-white hover:bg-emerald-700 shadow-md hover:shadow-lg rounded-lg font-bold transition-all transform hover:-translate-y-0.5"
     };
 
+    // Change styling if already in queue
+    const buttonClasses = isInQueue
+        ? "bg-slate-300 dark:bg-slate-600 text-slate-600 dark:text-slate-400 cursor-not-allowed rounded-lg"
+        : variantClasses[variant];
+
     return (
         <button
             onClick={handleAdd}
-            className={`flex items-center gap-2 ${variantClasses[variant]} ${sizeClasses} relative group`}
-            title={added ? "تمت الإضافة!" : (label || "إضافة لقائمة التشغيل")}
+            disabled={isInQueue}
+            className={`flex items-center gap-2 ${buttonClasses} ${sizeClasses} relative group`}
+            title={isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة!" : (label || "إضافة لقائمة التشغيل"))}
         >
-            {added ? (
+            {isInQueue ? (
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+            ) : added ? (
                 <svg className="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
@@ -54,12 +78,12 @@ export default function QueueButton({ track, tracks, variant = "outline", size =
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
             )}
-            {label && <span className="font-bold">{added ? "تمت الإضافة" : label}</span>}
+            {label && <span className="font-bold">{isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة" : label)}</span>}
 
             {/* Tooltip for icon variant */}
             {variant === "icon" && (
                 <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
-                    {added ? "تمت الإضافة" : (label || "إضافة للقائمة")}
+                    {isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة" : (label || "إضافة لقائمة التشغيل"))}
                 </span>
             )}
         </button>

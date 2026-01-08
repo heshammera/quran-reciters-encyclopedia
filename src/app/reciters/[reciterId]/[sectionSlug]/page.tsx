@@ -95,7 +95,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                 <div className="shrink-0">
                     <QueueButton
                         tracks={queueTracks}
-                        label="إضافة القسم كاملاً للقائمة"
+                        label="إضافة القسم كاملاً لقائمة التشغيل"
                         variant="solid"
                     />
                 </div>

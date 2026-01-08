@@ -159,9 +159,12 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                 <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
                                     📅 {recording.recording_date?.year || "غير مؤرخ"}
                                 </span>
-                                <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                <Link
+                                    href={`/reciters/${recording.reciter.id}/${recording.section?.slug}`}
+                                    className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
+                                >
                                     📂 {recording.section?.name_ar}
-                                </span>
+                                </Link>
                                 {recording.rarity_classification !== 'common' && (
                                     <span className={`px-3 py-1 rounded-full text-sm text-white ${recording.rarity_classification === 'very_rare' ? 'bg-purple-600' :
                                         recording.rarity_classification === 'rare' ? 'bg-red-500' : 'bg-amber-500'
@@ -186,7 +189,7 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                 ) : (
                                     <>
                                         <PlayButton track={track} contextTracks={contextTracks} size="lg" />
-                                        <QueueButton track={track} label="إضافة للقائمة" variant="solid" />
+                                        <QueueButton track={track} label="إضافة لقائمة التشغيل" variant="solid" />
                                     </>
                                 )}
                             </div>
@@ -196,9 +199,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
             </header>
 
             <main className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 gap-8">
                     {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-8">
+                    <div className="space-y-8">
                         {/* Video Player if applicable */}
                         {isVideo && recording.video_url && (
                             <div id="video-player" className="bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 aspect-video">
@@ -254,9 +257,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                     <div className="pt-2">
                                         <span className="font-bold text-slate-700 dark:text-slate-300 block mb-2">محتوى التسجيل:</span>
                                         {recording.recording_coverage && recording.recording_coverage.length > 0 ? (
-                                            <ul className="space-y-2">
+                                            <div className="flex flex-wrap gap-2">
                                                 {recording.recording_coverage.map((seg: any, idx: number) => (
-                                                    <li key={idx} className="flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                                                    <span key={idx} className="inline-flex items-center gap-2 bg-slate-50 dark:bg-slate-900/50 px-3 py-2 rounded-lg border border-slate-100 dark:border-slate-800">
                                                         <span className="text-emerald-600 dark:text-emerald-400 font-bold">
                                                             سورة {getSurahName(seg.surah_number)}
                                                         </span>
@@ -264,9 +267,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                         <span className="text-sm text-slate-500">
                                                             الآيات {seg.ayah_start} - {seg.ayah_end}
                                                         </span>
-                                                    </li>
+                                                    </span>
                                                 ))}
-                                            </ul>
+                                            </div>
                                         ) : (
                                             <p className="text-base text-slate-700 dark:text-slate-300">
                                                 سورة {getSurahName(recording.surah_number)} (الآيات {recording.ayah_start} - {recording.ayah_end})
@@ -290,11 +293,11 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                         <Link
                                             key={sim.id}
                                             href={`/recordings/${sim.id}`}
-                                            className="block group"
+                                            className="block group h-full"
                                         >
-                                            <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500">
-                                                <div className="p-4 flex items-center gap-4">
-                                                    <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
+                                            <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 h-full flex flex-col">
+                                                <div className="p-5 flex items-start gap-4">
+                                                    <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
                                                         {sim.reciter?.image_url && (
                                                             <img
                                                                 src={sim.reciter.image_url}
@@ -303,27 +306,27 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                             />
                                                         )}
                                                     </div>
-                                                    <div>
-                                                        <div className="flex items-center flex-wrap gap-2 mb-1">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center flex-wrap gap-2 mb-2">
                                                             {sim.recording_coverage && sim.recording_coverage.length > 0 ? (
                                                                 <div className="flex flex-wrap gap-1">
                                                                     {sim.recording_coverage.map((seg: any, sIdx: number) => (
-                                                                        <span key={sIdx} className="text-[10px] font-bold text-emerald-600 dark:text-emerald-300 px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 rounded">
+                                                                        <span key={sIdx} className="text-sm font-bold text-emerald-600 dark:text-emerald-300 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded">
                                                                             سورة {getSurahName(seg.surah_number)} ({seg.ayah_start}-{seg.ayah_end})
                                                                         </span>
                                                                     ))}
                                                                 </div>
                                                             ) : (
-                                                                <span className="text-xs font-bold text-emerald-600 dark:text-emerald-300 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-500/10 rounded">
+                                                                <span className="text-sm font-bold text-emerald-600 dark:text-emerald-300 px-2 py-1 bg-emerald-50 dark:bg-emerald-500/10 rounded">
                                                                     سورة {getSurahName(sim.surah_number)} ({sim.ayah_start} - {sim.ayah_end})
                                                                 </span>
                                                             )}
-                                                            <span className="text-xs text-slate-500 dark:text-slate-300">
+                                                            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
                                                                 {sim.section?.name_ar}
                                                             </span>
                                                         </div>
                                                         <div className="flex flex-col gap-2">
-                                                            <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
+                                                            <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
                                                                 الشيخ {sim.reciter?.name_ar}
                                                             </h3>
                                                             <div className="flex items-center gap-2">
@@ -366,8 +369,8 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                                                 )}
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                                                            {sim.city} {sim.recording_date?.year ? `(${sim.recording_date.year})` : ''}
+                                                        <p className="text-base text-slate-600 dark:text-slate-300 mt-1 font-medium">
+                                                            📍 {sim.city} {sim.recording_date?.year ? `• ${sim.recording_date.year}` : ''}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -381,11 +384,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                 </div>
                             )}
                         </div>
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="lg:col-span-1 space-y-6">
-                        <CitationExport recording={recording} />
+                        <div className="pt-8">
+                            <CitationExport recording={recording} />
+                        </div>
                     </div>
                 </div>
             </main>
