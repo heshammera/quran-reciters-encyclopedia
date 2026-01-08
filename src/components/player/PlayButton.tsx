@@ -7,9 +7,17 @@ interface PlayButtonProps {
     track: Track;
     contextTracks?: Track[];
     size?: "sm" | "md" | "lg";
+    className?: string;
+    label?: string;
 }
 
-export default function PlayButton({ track, contextTracks, size = "md" }: PlayButtonProps) {
+export default function PlayButton({
+    track,
+    contextTracks,
+    size = "md",
+    className = "",
+    label
+}: PlayButtonProps) {
     const { state, dispatch } = usePlayer();
     const isCurrentTrack = state.currentTrack?.id === track.id;
     const isPlaying = isCurrentTrack && state.isPlaying;
@@ -44,16 +52,19 @@ export default function PlayButton({ track, contextTracks, size = "md" }: PlayBu
     return (
         <button
             onClick={handleClick}
-            className={`${sizeClasses[size]} rounded-full flex items-center justify-center transition-all duration-200 ${isPlaying
-                ? "bg-emerald-600 text-white shadow-lg scale-105"
-                : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
+            className={`flex items-center justify-center transition-all duration-200 gap-2 ${className} ${label ? "rounded-lg px-4 py-2 font-bold text-sm" : `${sizeClasses[size]} rounded-full`
+                } ${isPlaying
+                    ? "bg-emerald-600 text-white shadow-lg scale-[1.02]"
+                    : "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-200 dark:hover:bg-emerald-900/50"
                 }`}
+            title={isPlaying ? "إيقاف مؤقت" : "تشغيل"}
         >
             {isPlaying ? (
                 <svg className={iconClasses[size]} fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" /></svg>
             ) : (
                 <svg className={`${iconClasses[size]} translate-x-0.5`} fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
             )}
+            {label && <span>{isPlaying ? "جاري التشغيل" : label}</span>}
         </button>
     );
 }

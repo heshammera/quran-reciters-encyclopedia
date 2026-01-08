@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { usePlayer } from "@/hooks/usePlayer";
 import {
     isTrackDownloaded,
-    addDownloadedTrack,
     downloadAudioForOffline,
+    addPendingDownload,
     type DownloadedTrack
 } from "@/lib/download-manager";
 
@@ -15,15 +15,28 @@ interface DownloadButtonProps {
     reciterName: string;
     audioUrl: string;
     surahNumber?: number;
+    className?: string;
+    fullWidth?: boolean;
 }
 
-export default function DownloadButton({ trackId, title, reciterName, audioUrl, surahNumber }: DownloadButtonProps) {
+export default function DownloadButton({
+    trackId,
+    title,
+    reciterName,
+    audioUrl,
+    surahNumber,
+    className = "",
+    fullWidth = false
+}: DownloadButtonProps) {
+    const { state, dispatch } = usePlayer();
     const [isDownloaded, setIsDownloaded] = useState(false);
-    const [isDownloading, setIsDownloading] = useState(false);
+
+    // Check if this specific URL is being downloaded globally
+    const isDownloading = state.activeDownloads.includes(audioUrl);
 
     useEffect(() => {
         setIsDownloaded(isTrackDownloaded(trackId));
-    }, [trackId]);
+    }, [trackId, state.activeDownloads]);
 
     const handleDownload = async (e: React.MouseEvent) => {
         e.preventDefault();
@@ -31,33 +44,36 @@ export default function DownloadButton({ trackId, title, reciterName, audioUrl, 
 
         if (isDownloaded || isDownloading) return;
 
-        setIsDownloading(true);
+        // 1. Prepare metadata
+        const track: DownloadedTrack = {
+            id: trackId,
+            title,
+            reciterName,
+            audioUrl,
+            surahNumber,
+            downloadedAt: Date.now()
+        };
+
+        // 2. Save to pending (in case of navigation)
+        addPendingDownload(track);
+
+        // 3. Update global UI state
+        dispatch({ type: "START_DOWNLOAD", payload: audioUrl });
 
         try {
-            // Download via Service Worker
+            // 4. Trigger Service Worker
             const success = await downloadAudioForOffline(audioUrl);
 
-            if (success) {
-                // Add to downloads list
-                const track: DownloadedTrack = {
-                    id: trackId,
-                    title,
-                    reciterName,
-                    audioUrl,
-                    surahNumber,
-                    downloadedAt: Date.now()
-                };
-
-                addDownloadedTrack(track);
-                setIsDownloaded(true);
-            } else {
-                alert('فشل التحميل. تأكد من اتصالك بالإنترنت.');
+            // Note: success handling for the specific trigger is optional here
+            // because AudioPlayer.tsx global listener now handles the SW broadcast.
+            if (!success) {
+                // If it failed immediately
+                dispatch({ type: "COMPLETE_DOWNLOAD", payload: audioUrl });
+                // We don't remove pending here because the broadcast might still come if SW is slow
             }
         } catch (error) {
-            console.error('Download error:', error);
-            alert('حدث خطأ أثناء التحميل');
-        } finally {
-            setIsDownloading(false);
+            console.error('Download trigger error:', error);
+            dispatch({ type: "COMPLETE_DOWNLOAD", payload: audioUrl });
         }
     };
 
@@ -65,7 +81,7 @@ export default function DownloadButton({ trackId, title, reciterName, audioUrl, 
         return (
             <button
                 disabled
-                className="flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg cursor-not-allowed"
+                className={`flex items-center justify-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg cursor-not-allowed ${fullWidth ? "w-full" : ""} ${className}`}
                 title="محفوظة أوفلاين"
             >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,9 +96,9 @@ export default function DownloadButton({ trackId, title, reciterName, audioUrl, 
         <button
             onClick={handleDownload}
             disabled={isDownloading}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold text-sm ${isDownloading
-                    ? "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400 cursor-wait"
-                    : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
+            className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-colors font-bold text-sm ${fullWidth ? "w-full" : ""} ${className} ${isDownloading
+                ? "bg-slate-200 text-slate-500 dark:bg-slate-700 dark:text-slate-400 cursor-wait"
+                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
                 }`}
             title={isDownloading ? "جاري التحميل..." : "حفظ للاستماع أوفلاين"}
         >

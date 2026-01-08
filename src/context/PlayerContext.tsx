@@ -14,6 +14,7 @@ const initialState: PlayerState = {
     repeatMode: 'off',
     shuffle: false,
     isMinimized: false,
+    activeDownloads: [],
 };
 
 function playerReducer(state: PlayerState, action: Action): PlayerState {
@@ -80,22 +81,19 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 queue: filteredQueue
             };
         case "NEXT_TRACK":
-            // Logic to move to next track would normally require knowing the index.
-            // For simplicity, we assume the queue logic is handled by the component or we shift here.
-            // Let's keep it simple: The UI usually drives "play next", but if we want auto-next:
-            // We'll need to find current index in queue.
             if (!state.currentTrack || state.queue.length === 0) return state;
             const currentIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
 
-            // Repeat One - replay same track
+            // Repeat One - replay same track by cloning it to trigger AudioPlayer useEffect
             if (state.repeatMode === 'one') {
                 return {
                     ...state,
+                    currentTrack: { ...state.currentTrack },
                     isPlaying: true
                 };
             }
 
-            // Normal or Repeat All
+            // Normal or Repeat All logic
             if (currentIndex === -1 || currentIndex === state.queue.length - 1) {
                 // End of queue
                 if (state.repeatMode === 'all') {
@@ -106,8 +104,11 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                         isPlaying: true
                     };
                 }
-                // No repeat - stop
-                return state;
+                // No repeat - stop playback
+                return {
+                    ...state,
+                    isPlaying: false
+                };
             }
 
             // Play next track
@@ -119,7 +120,16 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
         case "PREV_TRACK":
             if (!state.currentTrack || state.queue.length === 0) return state;
             const prevIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
-            if (prevIndex <= 0) return state;
+
+            if (prevIndex <= 0) {
+                // If it's the first track, just restart it
+                return {
+                    ...state,
+                    currentTrack: { ...state.currentTrack },
+                    isPlaying: true
+                };
+            }
+
             return {
                 ...state,
                 currentTrack: state.queue[prevIndex - 1],
@@ -160,6 +170,16 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 queue: !state.shuffle && state.queue.length > 0
                     ? [...state.queue].sort(() => Math.random() - 0.5)
                     : state.queue
+            };
+        case "START_DOWNLOAD":
+            return {
+                ...state,
+                activeDownloads: [...state.activeDownloads, action.payload]
+            };
+        case "COMPLETE_DOWNLOAD":
+            return {
+                ...state,
+                activeDownloads: state.activeDownloads.filter(url => url !== action.payload)
             };
         default:
             return state;

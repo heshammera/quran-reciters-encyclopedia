@@ -10,9 +10,17 @@ interface QueueButtonProps {
     variant?: "icon" | "outline" | "ghost" | "solid";
     size?: "sm" | "md";
     label?: string;
+    className?: string;
 }
 
-export default function QueueButton({ track, tracks, variant = "outline", size = "md", label }: QueueButtonProps) {
+export default function QueueButton({
+    track,
+    tracks,
+    variant = "outline",
+    size = "md",
+    label,
+    className = ""
+}: QueueButtonProps) {
     const { addToQueue, addTracksToQueue, state } = usePlayer();
     const [added, setAdded] = useState(false);
     const [isInQueue, setIsInQueue] = useState(false);
@@ -44,7 +52,9 @@ export default function QueueButton({ track, tracks, variant = "outline", size =
         setTimeout(() => setAdded(false), 2000);
     };
 
-    const sizeClasses = size === "sm" ? "p-1.5 text-xs" : "p-2 text-sm";
+    const sizeClasses = size === "sm"
+        ? `${label ? "px-3 py-1.5" : "p-1.5"} text-xs`
+        : `${label ? "px-4 py-2" : "p-2"} text-sm`;
 
     const variantClasses = {
         icon: "text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:text-slate-400 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/20 rounded-full transition-all p-2",
@@ -62,7 +72,7 @@ export default function QueueButton({ track, tracks, variant = "outline", size =
         <button
             onClick={handleAdd}
             disabled={isInQueue}
-            className={`flex items-center gap-2 ${buttonClasses} ${sizeClasses} relative group`}
+            className={`flex items-center justify-center gap-2 ${buttonClasses} ${sizeClasses} relative group ${className}`}
             title={isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة!" : (label || "إضافة لقائمة التشغيل"))}
         >
             {isInQueue ? (

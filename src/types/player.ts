@@ -21,6 +21,7 @@ export interface PlayerState {
     repeatMode: 'off' | 'one' | 'all';
     shuffle: boolean;
     isMinimized: boolean;
+    activeDownloads: string[]; // URLs of tracks currently being downloaded
 }
 
 export type Action =
@@ -41,5 +42,7 @@ export type Action =
     | { type: "CLEAR_SLEEP_TIMER" }
     | { type: "SET_PLAYBACK_RATE"; payload: number }
     | { type: "SET_REPEAT_MODE"; payload: 'off' | 'one' | 'all' }
-    | { type: "TOGGLE_SHUFFLE" };
+    | { type: "TOGGLE_SHUFFLE" }
+    | { type: "START_DOWNLOAD"; payload: string }
+    | { type: "COMPLETE_DOWNLOAD"; payload: string };
 

@@ -10,6 +10,32 @@ export interface DownloadedTrack {
 }
 
 const DOWNLOADS_KEY = 'offline-downloads';
+const PENDING_KEY = 'pending-downloads';
+
+export function getPendingDownloads(): Record<string, DownloadedTrack> {
+    try {
+        const stored = localStorage.getItem(PENDING_KEY);
+        return stored ? JSON.parse(stored) : {};
+    } catch {
+        return {};
+    }
+}
+
+export function addPendingDownload(track: DownloadedTrack): void {
+    const pending = getPendingDownloads();
+    pending[track.audioUrl] = track;
+    localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+}
+
+export function removePendingDownload(url: string): DownloadedTrack | null {
+    const pending = getPendingDownloads();
+    const track = pending[url] || null;
+    if (track) {
+        delete pending[url];
+        localStorage.setItem(PENDING_KEY, JSON.stringify(pending));
+    }
+    return track;
+}
 
 export function getDownloadedTracks(): DownloadedTrack[] {
     try {

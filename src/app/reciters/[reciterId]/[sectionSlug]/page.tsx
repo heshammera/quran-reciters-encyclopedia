@@ -10,6 +10,7 @@ import QueueButton from "@/components/player/QueueButton";
 import AutoPlayer from "@/components/player/AutoPlayer";
 import VideoModal from "@/components/player/VideoModal";
 import DownloadButton from "@/components/offline/DownloadButton";
+import RecordingItem from "@/components/reciters/RecordingItem";
 import { Track } from "@/types/player";
 import { SURAHS } from "@/lib/quran/metadata";
 import { getSurahName } from "@/lib/quran-helpers";
@@ -114,7 +115,6 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                         {recordings.map((recording: any) => {
                             const isVideo = recording.type === 'video';
 
-                            // For audio recordings, build track
                             const track: Track | null = isVideo ? null : {
                                 id: recording.id,
                                 title: recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام'),
@@ -127,96 +127,18 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                                 sectionSlug: section.slug,
                             };
 
-                            // Skip audio recordings without valid source
                             if (!isVideo && !track?.src) return null;
 
                             return (
-                                <div key={recording.id} className="p-4 flex items-center gap-4 group hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors">
-                                    {isVideo ? (
-                                        <button
-                                            onClick={() => setSelectedVideo(recording)}
-                                            className="w-12 h-12 rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center text-white shadow-lg transition-colors flex-shrink-0"
-                                            title="تشغيل الفيديو"
-                                        >
-                                            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                                                <path d="M8 5v14l11-7z" />
-                                            </svg>
-                                        </button>
-                                    ) : (
-                                        <div className="flex items-center gap-2">
-                                            <PlayButton track={track!} contextTracks={queueTracks} size="sm" />
-                                            <QueueButton track={track!} variant="ghost" size="sm" />
-                                        </div>
-                                    )}
-
-                                    {/* Info */}
-                                    <Link href={`/recordings/${recording.id}`} className="flex-1 min-w-0 block hover:no-underline">
-                                        <div className="flex items-center gap-2 mb-1">
-                                            <div className="flex flex-col">
-                                                <span className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-                                                    {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
-                                                </span>
-                                                {recording.recording_coverage && recording.recording_coverage.length > 0 ? (
-                                                    <div className="flex flex-wrap gap-1 mt-1">
-                                                        {recording.recording_coverage.map((seg: any, idx: number) => (
-                                                            <span key={idx} className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                                                سورة {getSurahName(seg.surah_number)} ({seg.ayah_start}-{seg.ayah_end})
-                                                            </span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    recording.surah_number && (
-                                                        <span className="text-xs text-slate-500 dark:text-slate-500 mt-1">
-                                                            {recording.title && <span>سورة {getSurahName(recording.surah_number)} - </span>}
-                                                            (الآيات {recording.ayah_start}-{recording.ayah_end})
-                                                        </span>
-                                                    )
-                                                )}
-                                            </div>
-                                            {isVideo && (
-                                                <span className="text-[10px] sm:text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">
-                                                    فيديو
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
-                                            {recording.recording_date?.year && <span>📅 {recording.recording_date.year}</span>}
-                                            {recording.city && <span>📍 {recording.city}</span>}
-                                            {recording.reciter_phases?.phase_name_ar && (
-                                                <span className="hidden sm:inline bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded">
-                                                    {recording.reciter_phases.phase_name_ar}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </Link>
-
-                                    {/* Actions */}
-                                    <div className="flex items-center gap-2 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {isVideo ? (
-                                            <button
-                                                onClick={() => setSelectedVideo(recording)}
-                                                className="p-2 text-slate-400 hover:text-red-600 transition-colors"
-                                                title="تشغيل"
-                                            >
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M8 5v14l11-7z" />
-                                                </svg>
-                                            </button>
-                                        ) : (
-                                            recording.media_files?.[0]?.archive_url && (
-                                                <div className="scale-75 origin-right">
-                                                    <DownloadButton
-                                                        trackId={recording.id}
-                                                        title={recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
-                                                        reciterName={reciter.name_ar}
-                                                        audioUrl={recording.media_files[0].archive_url}
-                                                        surahNumber={recording.surah_number}
-                                                    />
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                </div>
+                                <RecordingItem
+                                    key={recording.id}
+                                    recording={recording}
+                                    track={track}
+                                    contextTracks={queueTracks}
+                                    reciter={reciter}
+                                    section={section}
+                                    onVideoSelect={setSelectedVideo}
+                                />
                             );
                         })}
                     </div>

@@ -54,7 +54,11 @@ self.addEventListener('fetch', (event) => {
     if (!url.protocol.startsWith('http')) return;
 
     // Audio files - Cache First strategy
-    if (request.url.includes('.mp3') || request.url.includes('.m4a') || request.url.includes('audio')) {
+    // Only intercept common audio extensions to avoid breaking API calls or other assets
+    const audioExtensions = ['.mp3', '.m4a', '.wav', '.ogg', '.aac'];
+    const isAudio = audioExtensions.some(ext => url.pathname.toLowerCase().endsWith(ext));
+
+    if (isAudio) {
         event.respondWith(
             caches.match(request).then((cachedResponse) => {
                 if (cachedResponse) {
@@ -75,8 +79,11 @@ self.addEventListener('fetch', (event) => {
                     });
 
                     return response;
-                }).catch(() => {
-                    return new Response('Audio not available offline', { status: 503 });
+                }).catch((err) => {
+                    console.error('[SW] Audio fetch failed:', err);
+                    // Return a 404 or just let it fail so the browser can handle it correctly
+                    // Instead of a 503 text which breaks the <audio> tag
+                    return new Response(null, { status: 404, statusText: 'Not Found' });
                 });
             })
         );
@@ -133,6 +140,13 @@ self.addEventListener('fetch', (event) => {
     );
 });
 
+// Helper to broadcast messages to all clients
+const broadcast = (message) => {
+    self.clients.matchAll().then((clients) => {
+        clients.forEach((client) => client.postMessage(message));
+    });
+};
+
 // Handle messages from clients
 self.addEventListener('message', (event) => {
     if (event.data && event.data.type === 'SKIP_WAITING') {
@@ -143,10 +157,22 @@ self.addEventListener('message', (event) => {
         const { url } = event.data;
         caches.open(AUDIO_CACHE).then((cache) => {
             fetch(url).then((response) => {
-                cache.put(url, response);
-                event.ports[0].postMessage({ success: true });
-            }).catch(() => {
-                event.ports[0].postMessage({ success: false });
+                if (response.ok) {
+                    cache.put(url, response);
+                    // Broadcast to all clients
+                    broadcast({ type: 'DOWNLOAD_COMPLETE', url, success: true });
+                    if (event.ports && event.ports[0]) {
+                        event.ports[0].postMessage({ success: true });
+                    }
+                } else {
+                    throw new Error('Fetch failed');
+                }
+            }).catch((err) => {
+                console.error('[SW] Download failed:', err);
+                broadcast({ type: 'DOWNLOAD_ERROR', url, success: false });
+                if (event.ports && event.ports[0]) {
+                    event.ports[0].postMessage({ success: false });
+                }
             });
         });
     }

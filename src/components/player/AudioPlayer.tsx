@@ -9,6 +9,7 @@ import { addToHistory } from "@/lib/history-utils";
 
 import PlayerQueue from "./PlayerQueue";
 import DownloadButton from "../offline/DownloadButton";
+import { addDownloadedTrack, removePendingDownload } from "@/lib/download-manager";
 
 export default function AudioPlayer() {
     const { state, dispatch } = usePlayer();
@@ -21,6 +22,7 @@ export default function AudioPlayer() {
     const [showQueue, setShowQueue] = useState(false);
     const [showSleepMenu, setShowSleepMenu] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+    const sleepTimerEndTimeRef = useRef<number | null>(null);
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -61,15 +63,24 @@ export default function AudioPlayer() {
             // Normalize URLs to avoid redundant loads
             // Using a try-catch for URL construction to handle relative paths safely
             let normalizedTarget = currentTrack.src;
+            if (normalizedTarget.startsWith('//')) {
+                normalizedTarget = window.location.protocol + normalizedTarget;
+            }
+
             try {
-                normalizedTarget = new URL(currentTrack.src, window.location.origin).href;
+                normalizedTarget = new URL(normalizedTarget, window.location.origin).href;
             } catch (e) { }
 
             const normalizedCurrent = audio.src ? new URL(audio.src, window.location.origin).href : '';
 
             // 1. Update Source if different
             if (normalizedCurrent !== normalizedTarget) {
-                audio.src = currentTrack.src;
+                if (!currentTrack.src) {
+                    console.warn("AudioPlayer: Empty source received for track:", currentTrack.id);
+                    return;
+                }
+                console.log("AudioPlayer: Changing source to:", normalizedTarget);
+                audio.src = normalizedTarget;
                 audio.load(); // Force load new source
             } else if (isPlaying && audio.ended) {
                 // If same source but ended, reset to start
@@ -110,6 +121,13 @@ export default function AudioPlayer() {
         if (audioRef.current) {
             setProgress(audioRef.current.currentTime);
             setDuration(audioRef.current.duration || 0);
+
+            // Robust Sleep Timer Hard-Stop
+            if (sleepTimerEndTimeRef.current && Date.now() >= sleepTimerEndTimeRef.current) {
+                sleepTimerEndTimeRef.current = null;
+                dispatch({ type: "STOP_PLAYER" });
+                dispatch({ type: "CLEAR_SLEEP_TIMER" });
+            }
         }
     };
 
@@ -133,29 +151,54 @@ export default function AudioPlayer() {
         loadPrefs();
     }, [dispatch]);
 
-    // Sleep Timer Logic
+    // Sleep Timer UI Sync Logic
     useEffect(() => {
         if (!sleepTimer) {
             setTimeRemaining(null);
+            sleepTimerEndTimeRef.current = null;
             return;
         }
 
+        // Set the end time once when sleepTimer is changed
         const endTime = Date.now() + sleepTimer * 60 * 1000;
+        sleepTimerEndTimeRef.current = endTime;
         setTimeRemaining(sleepTimer);
 
         const interval = setInterval(() => {
-            const remaining = Math.ceil((endTime - Date.now()) / 1000 / 60);
+            if (!sleepTimerEndTimeRef.current) {
+                clearInterval(interval);
+                return;
+            }
+            const remaining = Math.ceil((sleepTimerEndTimeRef.current - Date.now()) / 1000 / 60);
             if (remaining <= 0) {
-                dispatch({ type: "STOP_PLAYER" });
-                dispatch({ type: "CLEAR_SLEEP_TIMER" });
+                setTimeRemaining(null);
                 clearInterval(interval);
             } else {
                 setTimeRemaining(remaining);
             }
-        }, 1000 * 30); // Update every 30 seconds
+        }, 1000 * 30); // Update UI every 30 seconds
 
         return () => clearInterval(interval);
-    }, [sleepTimer, dispatch]);
+    }, [sleepTimer]);
+
+    // Global Service Worker Listener for cross-page downloads
+    useEffect(() => {
+        if (!('serviceWorker' in navigator)) return;
+
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data && event.data.type === 'DOWNLOAD_COMPLETE') {
+                const { url } = event.data;
+                const track = removePendingDownload(url);
+                if (track) {
+                    addDownloadedTrack(track);
+                }
+                dispatch({ type: "COMPLETE_DOWNLOAD", payload: url });
+            }
+        };
+
+        navigator.serviceWorker.addEventListener('message', handleMessage);
+        return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+    }, [dispatch]);
 
     // Add to History when track starts playing
     useEffect(() => {
@@ -185,6 +228,14 @@ export default function AudioPlayer() {
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleEnded}
             onLoadedMetadata={handleTimeUpdate}
+            onError={(e) => {
+                const audio = e.currentTarget;
+                console.error("AudioPlayer: <audio> error event:", {
+                    code: audio.error?.code,
+                    message: audio.error?.message,
+                    src: audio.src
+                });
+            }}
         />
     );
 
@@ -384,7 +435,7 @@ export default function AudioPlayer() {
                     </span>
 
                     {/* Group 2: All Utility Tools */}
-                    <div className="flex items-center gap-1 md:gap-2 px-0 md:px-1.5 overflow-x-auto md:overflow-visible no-scrollbar w-full md:w-auto mt-2 md:mt-0 justify-between md:justify-start">
+                    <div className="flex flex-wrap md:flex-nowrap items-center gap-1 md:gap-2 px-0 md:px-1.5 w-full md:w-auto mt-2 md:mt-0 justify-between md:justify-start relative">
                         {/* Mobile prominence for Offline Download */}
                         <div className="flex md:hidden shrink-0">
                             <DownloadButton
@@ -510,18 +561,23 @@ export default function AudioPlayer() {
                             </button>
 
                             {showSleepMenu && (
-                                <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-2 min-w-[120px] z-[80]">
-                                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 px-2 py-1 mb-1">مؤقت النوم</div>
-                                    {[15, 30, 45, 60].map((minutes) => (
+                                <div className="absolute bottom-full right-0 md:right-auto md:left-0 mb-2 bg-white dark:bg-slate-800 rounded-lg shadow-xl border border-slate-200 dark:border-slate-700 p-2 min-w-[140px] z-[100]">
+                                    <div className="text-[10px] uppercase tracking-wider font-bold text-slate-400 px-2 py-1 mb-1 border-b border-slate-100 dark:border-slate-700">مؤقت النوم</div>
+                                    {[15, 30, 45, 60, 90].map((minutes) => (
                                         <button
                                             key={minutes}
                                             onClick={() => {
                                                 dispatch({ type: "SET_SLEEP_TIMER", payload: minutes });
                                                 setShowSleepMenu(false);
+                                                // Feedback for mobile
+                                                if (window.innerWidth < 768) {
+                                                    alert(`تم ضبط مؤقت النوم بعد ${minutes} دقيقة`);
+                                                }
                                             }}
-                                            className="w-full text-right px-3 py-1.5 text-xs hover:bg-slate-50 dark:hover:bg-slate-700 rounded transition-colors text-slate-700 dark:text-slate-300"
+                                            className="w-full text-right px-3 py-2 text-sm hover:bg-slate-50 dark:hover:bg-slate-700 rounded transition-colors text-slate-700 dark:text-slate-300 flex justify-between items-center"
                                         >
-                                            {minutes} دقيقة
+                                            <span>{minutes} دقيقة</span>
+                                            {sleepTimer === minutes && <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>}
                                         </button>
                                     ))}
                                     {sleepTimer && (
@@ -530,7 +586,7 @@ export default function AudioPlayer() {
                                                 dispatch({ type: "CLEAR_SLEEP_TIMER" });
                                                 setShowSleepMenu(false);
                                             }}
-                                            className="w-full text-right px-3 py-1.5 text-xs hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 mt-1 pt-1.5"
+                                            className="w-full text-right px-3 py-2 text-sm hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors text-red-600 dark:text-red-400 border-t border-slate-100 dark:border-slate-700 mt-2 pt-2 font-bold"
                                         >
                                             إلغاء المؤقت
                                         </button>
