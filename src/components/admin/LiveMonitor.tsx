@@ -24,9 +24,9 @@ export default function LiveMonitor() {
         console.log('Supabase client:', supabase);
 
         try {
-            // Create a fresh channel instance
-            const channelName = 'monitor-' + Date.now();
-            console.log('Creating channel:', channelName);
+            // Use the shared presence channel name
+            const channelName = 'quran-presence';
+            console.log('Connecting to shared channel:', channelName);
 
             const channel = supabase.channel(channelName);
             console.log('Channel created, state:', channel.state);
