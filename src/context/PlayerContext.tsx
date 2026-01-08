@@ -9,6 +9,11 @@ const initialState: PlayerState = {
     queue: [],
     volume: 1,
     isExpanded: false,
+    sleepTimer: null,
+    playbackRate: 1,
+    repeatMode: 'off',
+    shuffle: false,
+    isMinimized: false,
 };
 
 function playerReducer(state: PlayerState, action: Action): PlayerState {
@@ -40,6 +45,12 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
             return {
                 ...state,
                 isExpanded: !state.isExpanded,
+            };
+        case "TOGGLE_MINIMIZED":
+            return {
+                ...state,
+                isMinimized: !state.isMinimized,
+                isExpanded: false, // Close expanded view if minimizing
             };
         case "ADD_TO_QUEUE":
             // Check if track already exists in queue
@@ -75,12 +86,36 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
             // We'll need to find current index in queue.
             if (!state.currentTrack || state.queue.length === 0) return state;
             const currentIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
-            if (currentIndex === -1 || currentIndex === state.queue.length - 1) return state;
+
+            // Repeat One - replay same track
+            if (state.repeatMode === 'one') {
+                return {
+                    ...state,
+                    isPlaying: true
+                };
+            }
+
+            // Normal or Repeat All
+            if (currentIndex === -1 || currentIndex === state.queue.length - 1) {
+                // End of queue
+                if (state.repeatMode === 'all') {
+                    // Go back to first track
+                    return {
+                        ...state,
+                        currentTrack: state.queue[0],
+                        isPlaying: true
+                    };
+                }
+                // No repeat - stop
+                return state;
+            }
+
+            // Play next track
             return {
                 ...state,
                 currentTrack: state.queue[currentIndex + 1],
                 isPlaying: true
-            }
+            };
         case "PREV_TRACK":
             if (!state.currentTrack || state.queue.length === 0) return state;
             const prevIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
@@ -96,6 +131,35 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 currentTrack: null,
                 isPlaying: false,
                 queue: [] // Optional: clear queue on stop? Let's say yes for now to fully "close" it.
+            };
+        case "SET_SLEEP_TIMER":
+            return {
+                ...state,
+                sleepTimer: action.payload
+            };
+        case "CLEAR_SLEEP_TIMER":
+            return {
+                ...state,
+                sleepTimer: null
+            };
+        case "SET_PLAYBACK_RATE":
+            return {
+                ...state,
+                playbackRate: action.payload
+            };
+        case "SET_REPEAT_MODE":
+            return {
+                ...state,
+                repeatMode: action.payload
+            };
+        case "TOGGLE_SHUFFLE":
+            return {
+                ...state,
+                shuffle: !state.shuffle,
+                // Optionally shuffle the queue when enabled
+                queue: !state.shuffle && state.queue.length > 0
+                    ? [...state.queue].sort(() => Math.random() - 0.5)
+                    : state.queue
             };
         default:
             return state;
