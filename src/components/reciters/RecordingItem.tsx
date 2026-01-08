@@ -19,6 +19,7 @@ interface RecordingItemProps {
     reciter: any;
     section: any;
     onVideoSelect?: (recording: any) => void;
+    showReciterName?: boolean;
 }
 
 export default function RecordingItem({
@@ -27,7 +28,8 @@ export default function RecordingItem({
     contextTracks,
     reciter,
     section,
-    onVideoSelect
+    onVideoSelect,
+    showReciterName = false
 }: RecordingItemProps) {
     const { state } = usePlayer();
     const isVideo = recording.type === 'video';
@@ -82,6 +84,12 @@ export default function RecordingItem({
                                 {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
                                 {isVideo && <span className="mr-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-full">فيديو</span>}
                             </h4>
+
+                            {showReciterName && reciter?.name_ar && (
+                                <p className="text-sm font-medium text-emerald-600 dark:text-emerald-400 mt-0.5">
+                                    القارئ: {reciter.name_ar}
+                                </p>
+                            )}
 
                             {recording.recording_coverage && recording.recording_coverage.length > 0 ? (
                                 <div className="flex flex-wrap gap-1 mt-1">

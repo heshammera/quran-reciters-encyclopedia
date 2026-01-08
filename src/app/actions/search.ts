@@ -80,7 +80,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                     subtitle: `${r.reciter.name_ar} - ${r.city || r.recording_date?.year || 'تلاوة'}`,
                     url: `/recordings/${r.id}`,
                     src: r.media_files?.[0]?.archive_url,
-                    image_url: null
+                    image_url: null,
+                    meta: { raw: r }
                 });
             });
         }
@@ -126,7 +127,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                             subtitle: `القارئ ${r.reciter.name_ar} (الآية ${ayah.ayah_number})`,
                             url: `/recordings/${r.id}?t=${ayah.ayah_number}`,
                             src: r.media_files?.[0]?.archive_url,
-                            image_url: null
+                            image_url: null,
+                            meta: { raw: r, ayah: ayah.ayah_number }
                         });
                     });
                 }
@@ -164,7 +166,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                 subtitle: `${r.reciter.name_ar} - ${r.city || r.recording_date?.year || 'تلاوة'}`,
                 url: `/recordings/${r.id}`,
                 src: r.media_files?.[0]?.archive_url,
-                image_url: null
+                image_url: null,
+                meta: { raw: r }
             });
         });
     }
@@ -201,7 +204,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                         subtitle: `${r.reciter.name_ar} - ${r.city || r.recording_date?.year || 'تلاوة'}`,
                         url: `/recordings/${r.id}`,
                         src: r.media_files?.[0]?.archive_url,
-                        image_url: null
+                        image_url: null,
+                        meta: { raw: r }
                     });
                 });
             }
@@ -234,7 +238,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                 subtitle: `${r.reciter.name_ar}`,
                 url: `/recordings/${r.id}`,
                 src: r.media_files?.[0]?.archive_url,
-                image_url: null
+                image_url: null,
+                meta: { raw: r }
             });
         });
     }
@@ -268,7 +273,8 @@ export async function searchGlobal(query: string, limit: number = 5): Promise<Se
                     subtitle: `${r.reciter.name_ar} - ${r.city || r.recording_date?.year || 'تلاوة'}`,
                     url: `/recordings/${r.id}`,
                     src: r.media_files?.[0]?.archive_url,
-                    image_url: null
+                    image_url: null,
+                    meta: { raw: r }
                 });
             });
         }
