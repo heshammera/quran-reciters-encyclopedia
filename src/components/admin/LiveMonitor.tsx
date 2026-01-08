@@ -34,7 +34,19 @@ export default function LiveMonitor() {
             const updateState = () => {
                 const state = channel.presenceState();
                 console.log('=== Presence State ===', state);
-                setOnlineUsers(state as any);
+
+                // Fix: presenceState() returns an object with non-enumerable properties
+                // We need to explicitly extract them using Object.keys() or create a plain object
+                const plainState: Record<string, any> = {};
+                for (const key in state) {
+                    if (state.hasOwnProperty(key)) {
+                        plainState[key] = state[key];
+                    }
+                }
+
+                console.log('=== Plain State ===', plainState);
+                console.log('=== Plain State Keys ===', Object.keys(plainState));
+                setOnlineUsers(plainState);
             };
 
             // Subscribe to presence events

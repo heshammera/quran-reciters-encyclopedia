@@ -195,52 +195,126 @@ export default function ComparisonInterface() {
                 </div>
 
                 {recordings.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         {recordings.map((rec) => (
                             <div
                                 key={rec.id}
                                 className={cn(
-                                    "group bg-white dark:bg-slate-800 rounded-2xl p-4 border-2 transition-all hover:shadow-lg flex items-center justify-between gap-4",
+                                    "group relative bg-gradient-to-br overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500",
                                     state.currentTrack?.id === rec.id
-                                        ? "border-emerald-500 shadow-md ring-4 ring-emerald-500/5"
-                                        : "border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                                        ? "from-emerald-50 via-white to-emerald-50/50 dark:from-emerald-900/30 dark:via-slate-800 dark:to-emerald-900/20 ring-4 ring-emerald-500/30 shadow-emerald-500/20"
+                                        : "from-slate-50 via-white to-blue-50/30 dark:from-slate-800/50 dark:via-slate-800 dark:to-slate-700/50 hover:from-blue-50 hover:via-white hover:to-indigo-50/30 dark:hover:from-slate-700 dark:hover:via-slate-800 dark:hover:to-slate-700"
                                 )}
                             >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-14 h-14 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0 border-2 border-white dark:border-slate-800 shadow-sm transition-transform group-hover:scale-105">
-                                        {rec.reciters?.image_url ? (
-                                            <img
-                                                src={rec.reciters.image_url}
-                                                alt={rec.reciters.name_ar}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-2xl">🎙️</div>
+                                {/* Decorative gradient overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-blue-500/5 dark:via-white/[0.02] opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+
+                                {/* Glow effect for active card */}
+                                {state.currentTrack?.id === rec.id && (
+                                    <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-emerald-400/20 to-emerald-500/20 blur-xl -z-10 animate-pulse" />
+                                )}
+
+                                <div className="relative p-5 flex flex-col items-center text-center gap-4">
+                                    {/* Avatar Section */}
+                                    <div className="relative">
+                                        <div className={cn(
+                                            "w-20 h-20 rounded-2xl overflow-hidden shadow-lg ring-4 transition-all duration-500 group-hover:scale-110 group-hover:rotate-3",
+                                            state.currentTrack?.id === rec.id
+                                                ? "ring-emerald-300/50 dark:ring-emerald-500/30 shadow-emerald-500/30"
+                                                : "ring-white/80 dark:ring-slate-700/50 group-hover:ring-blue-200/50 dark:group-hover:ring-blue-500/20"
+                                        )}>
+                                            {rec.reciters?.image_url ? (
+                                                <img
+                                                    src={rec.reciters.image_url}
+                                                    alt={rec.reciters.name_ar}
+                                                    className="w-full h-full object-cover"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full flex items-center justify-center text-3xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-800">
+                                                    🎙️
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Active indicator */}
+                                        {state.currentTrack?.id === rec.id && (
+                                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+                                                <span className="text-white text-sm">▶️</span>
+                                            </div>
                                         )}
                                     </div>
-                                    <div className="min-w-0">
-                                        <h4 className="font-bold text-slate-900 dark:text-white truncate text-lg">{rec.reciters?.name_ar}</h4>
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate opacity-80">
-                                            {rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : (rec.sections?.name_ar || 'تلاوة'))} • {rec.city || 'غير محدد'}
+
+                                    {/* Info Section */}
+                                    <div className="w-full space-y-2">
+                                        {/* Reciter Name */}
+                                        <h4 className={cn(
+                                            "font-bold text-lg transition-colors truncate px-2",
+                                            state.currentTrack?.id === rec.id
+                                                ? "text-emerald-700 dark:text-emerald-300"
+                                                : "text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400"
+                                        )}>
+                                            {rec.reciters?.name_ar}
+                                        </h4>
+
+                                        {/* Recording Info */}
+                                        <p className="text-sm text-slate-600 dark:text-slate-400 truncate px-2">
+                                            {rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : (rec.sections?.name_ar || 'تلاوة'))}
                                         </p>
+
+                                        {/* City */}
+                                        {rec.city && (
+                                            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-500 dark:text-slate-500">
+                                                <span className="opacity-60">📍</span>
+                                                <span className="truncate max-w-[200px]">{rec.city}</span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* Action Buttons */}
+                                    <div className="flex gap-2 w-full">
+                                        {/* Add to Queue Button */}
+                                        <button
+                                            onClick={() => {
+                                                // Add to queue functionality
+                                                const track: Track = {
+                                                    id: rec.id,
+                                                    title: rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)} (${rec.ayah_start}-${rec.ayah_end})` : 'تسجيل عام'),
+                                                    reciterName: rec.reciters?.name_ar || "Unknown",
+                                                    src: rec.archive_url,
+                                                    reciterId: rec.reciter_id,
+                                                };
+                                                console.log('Add to queue:', track);
+                                            }}
+                                            className="relative p-3 rounded-2xl font-bold transition-all duration-300 flex items-center justify-center shadow-lg active:scale-95 overflow-hidden bg-gradient-to-r from-indigo-100 to-purple-50 dark:from-indigo-900/30 dark:to-purple-900/30 text-indigo-700 dark:text-indigo-300 hover:from-indigo-600 hover:to-purple-600 hover:text-white dark:hover:from-indigo-600 dark:hover:to-purple-600 shadow-indigo-200/50 dark:shadow-indigo-900/50 group/queue"
+                                            title="إضافة إلى قائمة التشغيل"
+                                        >
+                                            {/* Button gradient overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/queue:translate-x-[100%] transition-transform duration-700" />
+                                            <span className="relative z-10 text-lg">➕</span>
+                                        </button>
+
+                                        {/* Play Button */}
+                                        <button
+                                            onClick={() => playRecording(rec)}
+                                            className={cn(
+                                                "flex-1 relative px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 shadow-lg active:scale-95 overflow-hidden group/btn",
+                                                state.currentTrack?.id === rec.id
+                                                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50"
+                                                    : "bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-white hover:from-blue-600 hover:to-indigo-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-indigo-600 shadow-slate-200/50 dark:shadow-slate-900/50"
+                                            )}
+                                        >
+                                            {/* Button gradient overlay */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+
+                                            <span className="relative z-10 text-lg">
+                                                {state.currentTrack?.id === rec.id ? '⏸️' : '▶️'}
+                                            </span>
+                                            <span className="relative z-10 font-bold">
+                                                {state.currentTrack?.id === rec.id ? 'يُشغَّل' : 'استمع'}
+                                            </span>
+                                        </button>
                                     </div>
                                 </div>
-
-                                <button
-                                    onClick={() => playRecording(rec)}
-                                    className={cn(
-                                        "px-6 py-2.5 rounded-xl font-bold transition-all flex items-center gap-2 shrink-0 shadow-sm active:scale-95",
-                                        state.currentTrack?.id === rec.id
-                                            ? "bg-emerald-600 text-white"
-                                            : "bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-white hover:bg-emerald-500 hover:text-white"
-                                    )}
-                                >
-                                    {state.currentTrack?.id === rec.id ? (
-                                        <><span>⏸️</span> يُشغَّل</>
-                                    ) : (
-                                        <><span>▶️</span> استمع</>
-                                    )}
-                                </button>
                             </div>
                         ))}
                     </div>
