@@ -81,7 +81,7 @@ export default function RootLayout({
                 {children}
               </main>
               {!isAdmin && <AudioPlayer />}
-              <LeanToggle />
+              {!isAdmin && <LeanToggle />}
               <OfflineIndicator />
               <PresenceTracker />
               {!isAdmin && <WelcomePopup />}
