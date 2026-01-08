@@ -7,6 +7,7 @@ export interface HistoryEntry {
     timestamp: number; // When it was played
     duration?: number; // How long was listened
     lastPosition?: number; // Last playback position
+    src?: string;
 }
 
 const HISTORY_KEY = 'listening-history';
@@ -48,10 +49,16 @@ export function clearHistory(): void {
 
 export function updateLastPosition(trackId: string, position: number): void {
     const history = getHistory();
-    const updated = history.map(entry =>
-        entry.trackId === trackId
-            ? { ...entry, lastPosition: position }
-            : entry
-    );
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(updated));
+    // Only update the first matching entry (most recent) to avoid ghost updates on old history
+    const index = history.findIndex(h => h.trackId === trackId);
+    if (index !== -1) {
+        history[index].lastPosition = position;
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+    }
+}
+
+export function getLastPosition(trackId: string): number {
+    const history = getHistory();
+    const entry = history.find(h => h.trackId === trackId);
+    return entry?.lastPosition || 0;
 }

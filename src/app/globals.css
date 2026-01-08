@@ -25,6 +25,23 @@ body {
   font-family: 'Tajawal', sans-serif;
 }
 
+/* Equalizer Animation */
+@keyframes equalizer {
+
+  0%,
+  100% {
+    height: 4px;
+  }
+
+  50% {
+    height: 12px;
+  }
+}
+
+.animate-equalizer {
+  animation: equalizer 1s infinite ease-in-out;
+}
+
 /* Lean Mode (Quiet/Data Saving Mode) */
 body[data-mode="lean"] * {
   transition: none !important;

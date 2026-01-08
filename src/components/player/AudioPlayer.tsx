@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePlayer } from "@/hooks/usePlayer";
 import { formatTime } from "@/lib/utils";
 import { useLeanMode } from "@/context/LeanModeContext";
-import { addToHistory } from "@/lib/history-utils";
+import { addToHistory, updateLastPosition, getLastPosition } from "@/lib/history-utils";
 
 import PlayerQueue from "./PlayerQueue";
 import DownloadButton from "../offline/DownloadButton";
@@ -23,6 +23,7 @@ export default function AudioPlayer() {
     const [showSleepMenu, setShowSleepMenu] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
     const sleepTimerEndTimeRef = useRef<number | null>(null);
+    const lastSaveTimeRef = useRef<number>(0);
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -82,6 +83,13 @@ export default function AudioPlayer() {
                 console.log("AudioPlayer: Changing source to:", normalizedTarget);
                 audio.src = normalizedTarget;
                 audio.load(); // Force load new source
+
+                // Check history for resume position
+                const lastPos = getLastPosition(currentTrack.id);
+                if (lastPos > 5) { // Only resume if > 5 seconds in
+                    audio.currentTime = lastPos;
+                }
+
             } else if (isPlaying && audio.ended) {
                 // If same source but ended, reset to start
                 audio.currentTime = 0;
@@ -127,6 +135,12 @@ export default function AudioPlayer() {
                 sleepTimerEndTimeRef.current = null;
                 dispatch({ type: "STOP_PLAYER" });
                 dispatch({ type: "CLEAR_SLEEP_TIMER" });
+            }
+
+            // Save Progress Periodically (every 2 seconds)
+            if (currentTrack && Date.now() - lastSaveTimeRef.current > 2000) {
+                updateLastPosition(currentTrack.id, audioRef.current.currentTime);
+                lastSaveTimeRef.current = Date.now();
             }
         }
     };
@@ -207,7 +221,8 @@ export default function AudioPlayer() {
                 trackId: currentTrack.id,
                 title: currentTrack.title,
                 reciterName: currentTrack.reciterName,
-                surahNumber: currentTrack.surahNumber
+                surahNumber: currentTrack.surahNumber,
+                src: currentTrack.src
             });
         }
     }, [currentTrack?.id, isPlaying]);
