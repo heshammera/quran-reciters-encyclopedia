@@ -28,42 +28,50 @@ export async function getUsersList(): Promise<AdminUser[]> {
             email: user.email,
             created_at: user.created_at,
             last_sign_in_at: user.last_sign_in_at,
-            role: userRole?.role || null // Null means standard user
+            role: userRole?.role || null, // Null means standard user
+            permissions: userRole?.permissions || undefined
         };
     });
 
     return usersWithRoles;
 }
 
-export async function updateUserRole(userId: string, role: string) {
+// Comprehensive User Update (Email, Password, Role, Permissions)
+export async function updateUser(userId: string, data: { email?: string; password?: string; role?: string; permissions?: any }) {
     const supabase = createAdminClient();
+    const updates: any = {};
 
-    if (!role || role === "user") {
-        // If "user" or empty, we remove the role entry (default is user/null)
-        // Or if your logic requires 'user' in DB, insert it. 
-        // My schema constraint says: role IN ('admin', 'editor', 'user')
-        // So let's delete if 'user' to keep table clean, OR just upsert 'user'.
-        // Let's upsert 'user' to be explicit.
+    // 1. Auth Updates (Email, Password)
+    if (data.email) updates.email = data.email;
+    if (data.password) updates.password = data.password;
 
-        // Wait, if I delete, then `isAdmin` check `exists(...)` returns false, which is correct for non-admin.
-        // Let's standardise: always upsert.
+    if (Object.keys(updates).length > 0) {
+        // Need to set email_confirm = true if changing email to avoid re-confirmation loop often annoying for admins
+        if (data.email) updates.email_confirm = true;
+
+        const { error: authError } = await supabase.auth.admin.updateUserById(userId, updates);
+        if (authError) throw new Error(`Auth Update Error: ${authError.message}`);
     }
 
-    // Upsert role
-    const { error } = await supabase
-        .from("user_roles")
-        .upsert({
-            user_id: userId,
-            role: role
-        }, { onConflict: 'user_id' });
+    // 2. Role & Permissions Update
+    // Always upsert user_roles if role/permissions are touched or even if just ensuring sync
+    if (data.role || data.permissions) {
+        const { error: roleError } = await supabase
+            .from("user_roles")
+            .upsert({
+                user_id: userId,
+                role: data.role || 'user', // Default to user if undefined but this branch hits
+                permissions: data.permissions
+            }, { onConflict: 'user_id' });
 
-    if (error) throw new Error(error.message);
+        if (roleError) throw new Error(`Role Update Error: ${roleError.message}`);
+    }
 
     revalidatePath("/admin/users");
     return { success: true };
 }
 
-export async function createUser(data: { email: string; password?: string; role: string }) {
+export async function createUser(data: { email: string; password?: string; role: string; permissions?: any }) {
     const supabase = createAdminClient();
 
     // Default password if not provided
@@ -80,13 +88,15 @@ export async function createUser(data: { email: string; password?: string; role:
     if (createError) throw new Error(createError.message);
     if (!user.user) throw new Error("User creation failed without error message");
 
-    // 2. Assign Role
-    if (data.role && data.role !== 'user') {
+    // 2. Assign Role & Permissions
+    // Always insert into user_roles if we have a role OR permissions
+    if (data.role || data.permissions) {
         const { error: roleError } = await supabase
             .from("user_roles")
             .insert({
                 user_id: user.user.id,
-                role: data.role
+                role: data.role || 'user',
+                permissions: data.permissions
             });
 
         if (roleError) {

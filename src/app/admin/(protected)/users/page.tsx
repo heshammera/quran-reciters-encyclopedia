@@ -36,7 +36,7 @@ export default async function UsersPage() {
                             <th className="p-4">البريد الإلكتروني</th>
                             <th className="p-4">تاريخ التسجيل</th>
                             <th className="p-4">آخر دخول</th>
-                            <th className="p-4">الدور (الصلاحية)</th>
+                            <th className="p-4">الدور والصلاحيات</th>
                             <th className="p-4">إجراءات</th>
                         </tr>
                     </thead>

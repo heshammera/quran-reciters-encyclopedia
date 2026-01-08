@@ -3,9 +3,17 @@ import { getReciters, getSections } from "@/lib/supabase/queries";
 import { createClient } from "@/lib/supabase/server";
 import VideoCardActions from "@/components/admin/VideoCardActions";
 import { SURAHS } from "@/lib/quran/metadata";
+import { getCurrentAdminUser } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function VideosPage() {
     const supabase = await createClient();
+    const user = await getCurrentAdminUser();
+
+    // Permission Checks (videos use 'recordings' permissions)
+    const canCreate = hasPermission(user, 'recordings', 'create');
+    const canEdit = hasPermission(user, 'recordings', 'edit');
+    const canDelete = hasPermission(user, 'recordings', 'delete');
 
     // Fetch videos
     const { data: videos } = await supabase
@@ -30,15 +38,17 @@ export default async function VideosPage() {
                         إدارة الفيديوهات والنوادر المرئية
                     </p>
                 </div>
-                <Link
-                    href="/admin/videos/add"
-                    className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-lg shadow-emerald-500/20"
-                >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    إضافة فيديو جديد
-                </Link>
+                {canCreate && (
+                    <Link
+                        href="/admin/videos/add"
+                        className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg font-bold transition-colors shadow-lg shadow-emerald-500/20"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        إضافة فيديو جديد
+                    </Link>
+                )}
             </div>
 
             {/* Video Grid (Mobile Friendly) */}
@@ -91,7 +101,7 @@ export default async function VideosPage() {
 
                                 <div className="flex items-center justify-between text-xs text-slate-500 border-t border-slate-100 dark:border-slate-700 pt-3">
                                     <span>{new Date(video.created_at).toLocaleDateString('ar-EG')}</span>
-                                    <VideoCardActions videoId={video.id} />
+                                    <VideoCardActions videoId={video.id} canEdit={canEdit} canDelete={canDelete} />
                                 </div>
                             </div>
                         </div>

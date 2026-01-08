@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Database } from "@/types/database";
 import DeleteButton from "@/components/admin/DeleteButton";
 import { SURAHS } from "@/lib/quran/metadata";
+import { getCurrentAdminUser } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 
 type RecordingWithDetails = Database["public"]["Tables"]["recordings"]["Row"] & {
     reciters: { name_ar: string } | null;
@@ -15,8 +17,14 @@ export default async function RecordingsList({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const supabase = await createClient();
+    const user = await getCurrentAdminUser();
     const params = await searchParams;
     const unpublishedOnly = params["unpublished"] === "true";
+
+    // Permission Checks
+    const canCreate = hasPermission(user, 'recordings', 'create');
+    const canEdit = hasPermission(user, 'recordings', 'edit');
+    const canDelete = hasPermission(user, 'recordings', 'delete');
 
     let query = supabase
         .from("recordings")
@@ -55,15 +63,17 @@ export default async function RecordingsList({
                         {unpublishedOnly && " (محجوب فقط)"}
                     </p>
                 </div>
-                <Link
-                    href="/admin/recordings/new"
-                    className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    إضافة تسجيل
-                </Link>
+                {canCreate && (
+                    <Link
+                        href="/admin/recordings/new"
+                        className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        إضافة تسجيل
+                    </Link>
+                )}
             </div>
 
             {/* Filters */}
@@ -149,13 +159,15 @@ export default async function RecordingsList({
                             </div>
 
                             <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-700">
-                                <Link
-                                    href={`/admin/recordings/${rec.id}`}
-                                    className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
-                                >
-                                    تعديل
-                                </Link>
-                                <DeleteButton id={rec.id} resource="recording" />
+                                {canEdit && (
+                                    <Link
+                                        href={`/admin/recordings/${rec.id}`}
+                                        className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                                    >
+                                        تعديل
+                                    </Link>
+                                )}
+                                {canDelete && <DeleteButton id={rec.id} resource="recording" />}
                             </div>
                         </div>
                     ))
@@ -233,13 +245,15 @@ export default async function RecordingsList({
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <Link
-                                                    href={`/admin/recordings/${rec.id}`}
-                                                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium text-sm"
-                                                >
-                                                    تعديل
-                                                </Link>
-                                                <DeleteButton id={rec.id} resource="recording" />
+                                                {canEdit && (
+                                                    <Link
+                                                        href={`/admin/recordings/${rec.id}`}
+                                                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium text-sm"
+                                                    >
+                                                        تعديل
+                                                    </Link>
+                                                )}
+                                                {canDelete && <DeleteButton id={rec.id} resource="recording" />}
                                             </div>
                                         </td>
                                     </tr>

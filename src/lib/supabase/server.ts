@@ -46,10 +46,15 @@ export async function isAdmin() {
     const supabase = createAdminClient();
     const { data } = await supabase
         .from("user_roles")
-        .select("role")
+        .select("role, permissions")
         .eq("user_id", user.id)
-        .eq("role", "admin")
         .single();
 
-    return !!data;
+    if (!data) return false;
+
+    // Allow Admins, Editors, and anyone with custom permissions
+    if (data.role === 'admin' || data.role === 'editor') return true;
+    if (data.permissions && Object.keys(data.permissions).length > 0) return true;
+
+    return false;
 }

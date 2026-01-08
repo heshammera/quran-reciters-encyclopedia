@@ -2,11 +2,19 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { hasPermission } from "@/lib/permissions";
+import { getCurrentAdminUser } from "@/lib/auth";
 
 /**
  * Delete a reciter by ID
  */
 export async function deleteReciter(id: string) {
+    const user = await getCurrentAdminUser();
+
+    if (!hasPermission(user, 'reciters', 'delete')) {
+        throw new Error("ليس لديك صلاحية لحذف القراء");
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase
@@ -26,6 +34,12 @@ export async function deleteReciter(id: string) {
  * Delete a recording by ID
  */
 export async function deleteRecording(id: string) {
+    const user = await getCurrentAdminUser();
+
+    if (!hasPermission(user, 'recordings', 'delete')) {
+        throw new Error("ليس لديك صلاحية لحذف التسجيلات");
+    }
+
     const supabase = await createClient();
 
     const { error } = await supabase

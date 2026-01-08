@@ -1,9 +1,17 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import DeleteButton from "@/components/admin/DeleteButton";
+import { getCurrentAdminUser } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function RecitersList() {
     const supabase = await createClient();
+    const user = await getCurrentAdminUser();
+
+    // Permission Checks
+    const canCreate = hasPermission(user, 'reciters', 'create');
+    const canEdit = hasPermission(user, 'reciters', 'edit');
+    const canDelete = hasPermission(user, 'reciters', 'delete');
 
     const { data: reciters, error } = await supabase
         .from("reciters")
@@ -24,15 +32,17 @@ export default async function RecitersList() {
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white self-start sm:self-auto">
                     إدارة القرّاء
                 </h1>
-                <Link
-                    href="/admin/reciters/new"
-                    className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
-                >
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                    إضافة قارئ
-                </Link>
+                {canCreate && (
+                    <Link
+                        href="/admin/reciters/new"
+                        className="w-full sm:w-auto px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
+                        إضافة قارئ
+                    </Link>
+                )}
             </div>
 
             {/* Mobile Cards (Visible on mobile only) */}
@@ -76,13 +86,15 @@ export default async function RecitersList() {
                                 >
                                     عرض
                                 </Link>
-                                <Link
-                                    href={`/admin/reciters/${reciter.id}`}
-                                    className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
-                                >
-                                    تعديل
-                                </Link>
-                                <DeleteButton id={reciter.id} resource="reciter" />
+                                {canEdit && (
+                                    <Link
+                                        href={`/admin/reciters/${reciter.id}`}
+                                        className="px-3 py-1.5 text-sm font-medium text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 rounded-md hover:bg-emerald-100 dark:hover:bg-emerald-900/40 transition-colors"
+                                    >
+                                        تعديل
+                                    </Link>
+                                )}
+                                {canDelete && <DeleteButton id={reciter.id} resource="reciter" />}
                             </div>
                         </div>
                     ))
@@ -134,12 +146,14 @@ export default async function RecitersList() {
                                         </td>
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
-                                                <Link
-                                                    href={`/admin/reciters/${reciter.id}`}
-                                                    className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium text-sm"
-                                                >
-                                                    تعديل
-                                                </Link>
+                                                {canEdit && (
+                                                    <Link
+                                                        href={`/admin/reciters/${reciter.id}`}
+                                                        className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium text-sm"
+                                                    >
+                                                        تعديل
+                                                    </Link>
+                                                )}
                                                 <Link
                                                     href={`/reciters/${reciter.id}`}
                                                     target="_blank"
@@ -147,7 +161,7 @@ export default async function RecitersList() {
                                                 >
                                                     عرض
                                                 </Link>
-                                                <DeleteButton id={reciter.id} resource="reciter" />
+                                                {canDelete && <DeleteButton id={reciter.id} resource="reciter" />}
                                             </div>
                                         </td>
                                     </tr>

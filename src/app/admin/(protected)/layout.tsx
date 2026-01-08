@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getUser, isAdmin } from "@/lib/supabase/server";
 import Link from "next/link";
+import { getCurrentAdminUser } from "@/lib/auth";
+import { hasPermission } from "@/lib/permissions";
 
 export default async function AdminLayout({
     children,
@@ -9,6 +11,16 @@ export default async function AdminLayout({
 }) {
     const user = await getUser();
     const admin = await isAdmin();
+    const currentUser = await getCurrentAdminUser();
+
+    // Navigation Visibility
+    const canViewReciters = hasPermission(currentUser, 'reciters', 'view');
+    const canViewRecordings = hasPermission(currentUser, 'recordings', 'view');
+    const canViewSections = hasPermission(currentUser, 'sections', 'view');
+    const canViewCollections = hasPermission(currentUser, 'collections', 'view');
+    const canViewPages = hasPermission(currentUser, 'pages', 'view');
+    const canViewUsers = hasPermission(currentUser, 'users', 'view');
+    const canViewIncomplete = currentUser?.permissions?.incomplete?.view || currentUser?.role === 'admin';
 
     if (!user) {
         redirect("/admin/login");
@@ -94,7 +106,6 @@ export default async function AdminLayout({
                     </div>
                 </div>
 
-                {/* Bottom Bar: Navigation */}
                 <div className="w-full px-4 border-t border-slate-100 dark:border-slate-700/50">
                     <nav className="flex gap-1 overflow-x-auto py-2 scrollbar-hide text-sm mask-linear-fade justify-between items-center">
                         <Link
@@ -103,60 +114,76 @@ export default async function AdminLayout({
                         >
                             الرئيسية
                         </Link>
-                        <Link
-                            href="/admin/reciters"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
-                        >
-                            القرّاء
-                        </Link>
-                        <Link
-                            href="/admin/recordings"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
-                        >
-                            الصوتيات
-                        </Link>
-                        <Link
-                            href="/admin/videos"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
-                        >
-                            المرئيات
-                        </Link>
-                        <Link
-                            href="/admin/sections"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
-                        >
-                            الأقسام
-                        </Link>
-                        <Link
-                            href="/admin/collections"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
-                        >
-                            المجموعات
-                        </Link>
+                        {canViewReciters && (
+                            <Link
+                                href="/admin/reciters"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
+                            >
+                                القرّاء
+                            </Link>
+                        )}
+                        {canViewRecordings && (
+                            <Link
+                                href="/admin/recordings"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
+                            >
+                                الصوتيات
+                            </Link>
+                        )}
+                        {canViewRecordings && (
+                            <Link
+                                href="/admin/videos"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
+                            >
+                                المرئيات
+                            </Link>
+                        )}
+                        {canViewSections && (
+                            <Link
+                                href="/admin/sections"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
+                            >
+                                الأقسام
+                            </Link>
+                        )}
+                        {canViewCollections && (
+                            <Link
+                                href="/admin/collections"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-700/50 font-medium whitespace-nowrap transition-colors"
+                            >
+                                المجموعات
+                            </Link>
+                        )}
 
                         <div className="w-px h-6 bg-slate-200 dark:bg-slate-700 mx-2 self-center shrink-0"></div>
 
-                        <Link
-                            href="/admin/incomplete"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
-                        >
-                            <span>⚠️</span>
-                            النواقص
-                        </Link>
-                        <Link
-                            href="/admin/users"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
-                        >
-                            <span>👥</span>
-                            الأعضاء
-                        </Link>
-                        <Link
-                            href="/admin/pages"
-                            className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
-                        >
-                            <span>📝</span>
-                            الصفحات
-                        </Link>
+                        {canViewIncomplete && (
+                            <Link
+                                href="/admin/incomplete"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                            >
+                                <span>⚠️</span>
+                                النواقص
+                            </Link>
+                        )}
+                        {canViewUsers && (
+                            <Link
+                                href="/admin/users"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                            >
+                                <span>👥</span>
+                                الأعضاء
+                            </Link>
+                        )}
+                        {canViewPages && (
+                            <Link
+                                href="/admin/pages"
+                                className="px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 font-medium text-sm flex items-center gap-1.5 whitespace-nowrap transition-colors"
+                            >
+                                <span>📝</span>
+                                الصفحات
+                            </Link>
+                        )}
                     </nav>
                 </div>
             </header>
