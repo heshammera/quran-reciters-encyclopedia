@@ -29,10 +29,10 @@ export default function UserRow({ user }: { user: any }) {
                 <td className="p-4 font-bold text-slate-900 dark:text-white font-mono">
                     {user.email}
                 </td>
-                <td className="p-4 text-slate-500">
+                <td className="p-4 text-slate-500 hidden md:table-cell">
                     {new Date(user.created_at).toLocaleDateString('ar-EG')}
                 </td>
-                <td className="p-4 text-slate-500">
+                <td className="p-4 text-slate-500 hidden md:table-cell">
                     {user.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('ar-EG') : 'لم يدخل بعد'}
                 </td>
                 <td className="p-4">

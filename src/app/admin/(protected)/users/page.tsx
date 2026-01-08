@@ -29,23 +29,25 @@ export default async function UsersPage() {
                 <AddUserButton />
             </div>
 
-            <div className="bg-white dark:bg-slate-800 rounded-xl shadow overflow-hidden border border-slate-200 dark:border-slate-700">
-                <table className="w-full text-sm text-right">
-                    <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-medium">
-                        <tr>
-                            <th className="p-4">البريد الإلكتروني</th>
-                            <th className="p-4">تاريخ التسجيل</th>
-                            <th className="p-4">آخر دخول</th>
-                            <th className="p-4">الدور والصلاحيات</th>
-                            <th className="p-4">إجراءات</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
-                        {users.map((user: AdminUser) => (
-                            <UserRow key={user.id} user={user} />
-                        ))}
-                    </tbody>
-                </table>
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700 overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-right min-w-[600px] md:min-w-0">
+                        <thead className="bg-slate-50 dark:bg-slate-900 text-slate-500 font-medium">
+                            <tr>
+                                <th className="p-4">البريد الإلكتروني</th>
+                                <th className="p-4 hidden md:table-cell">تاريخ التسجيل</th>
+                                <th className="p-4 hidden md:table-cell">آخر دخول</th>
+                                <th className="p-4">الدور والصلاحيات</th>
+                                <th className="p-4">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+                            {users.map((user: AdminUser) => (
+                                <UserRow key={user.id} user={user} />
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );

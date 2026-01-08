@@ -80,11 +80,11 @@ export default function RootLayout({
               <main className="flex-grow">
                 {children}
               </main>
-              <AudioPlayer />
+              {!isAdmin && <AudioPlayer />}
               <LeanToggle />
               <OfflineIndicator />
               <PresenceTracker />
-              <WelcomePopup />
+              {!isAdmin && <WelcomePopup />}
               {!isAdmin && <AssistantChat />}
               {!isAdmin && <Footer />}
             </div>

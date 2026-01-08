@@ -108,7 +108,7 @@ export default function EditUserModal({ user, isOpen, onClose }: EditUserModalPr
                 {/* Result Success View or Form */}
                 <>
                     {/* Sidebar / Header Section */}
-                    <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-900 p-8 border-l border-slate-200 dark:border-slate-800">
+                    <div className="w-full md:w-1/3 bg-slate-50 dark:bg-slate-900 p-6 md:p-8 border-b md:border-b-0 md:border-l border-slate-200 dark:border-slate-800">
                         <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">تعديل العضو</h2>
                         <p className="text-slate-500 text-sm mb-8">يمكنك تغيير البريد، كلمة المرور، والصلاحيات.</p>
 
@@ -163,7 +163,7 @@ export default function EditUserModal({ user, isOpen, onClose }: EditUserModalPr
                     </div>
 
                     {/* Main Content / Permissions Matrix */}
-                    <div className="w-full md:w-2/3 p-8 flex flex-col">
+                    <div className="w-full md:w-2/3 p-6 md:p-8 flex flex-col">
                         <div className="flex-1">
                             <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center justify-between">
                                 <span>جدول الصلاحيات</span>
