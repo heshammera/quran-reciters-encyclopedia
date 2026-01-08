@@ -101,10 +101,10 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <Link href={`/recordings/${rec.id}`} className="block">
-                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors ${isLean ? 'text-base' : 'text-xl'} flex items-center gap-2`}>
+                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-base flex items-center gap-2`}>
                                                         {rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام')}
                                                         {rec.type === 'video' && (
-                                                            <span className="text-[10px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">فيديو</span>
+                                                            <span className="text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">فيديو</span>
                                                         )}
                                                     </h4>
                                                     {!isLean && (
@@ -112,14 +112,14 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                             {rec.recording_coverage && rec.recording_coverage.length > 0 ? (
                                                                 <div className="flex flex-wrap gap-1 mb-2">
                                                                     {rec.recording_coverage.map((seg, idx) => (
-                                                                        <span key={idx} className="text-[10px] bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-600 dark:text-slate-400">
+                                                                        <span key={idx} className="text-sm bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
                                                                             سورة {getSurahName(seg.surah_number)} ({seg.ayah_start} - {seg.ayah_end})
                                                                         </span>
                                                                     ))}
-                                                                    {rec.city && <span className="text-[10px] text-slate-500"> • {rec.city}</span>}
+                                                                    {rec.city && <span className="text-sm text-slate-700 dark:text-slate-300"> • {rec.city}</span>}
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-sm text-slate-500 dark:text-slate-400 mb-2 font-mono">
+                                                                <div className="text-sm text-slate-700 dark:text-slate-300 mb-2">
                                                                     {rec.surah_number ? (
                                                                         <>
                                                                             {rec.title && <span>سورة {getSurahName(rec.surah_number)} - </span>}
@@ -137,7 +137,7 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                     )}
                                                 </Link>
 
-                                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 opacity-60">
+                                                <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                                                     {rec.section?.name_ar}
                                                 </div>
                                             </div>

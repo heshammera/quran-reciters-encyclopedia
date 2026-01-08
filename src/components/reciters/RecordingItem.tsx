@@ -77,28 +77,28 @@ export default function RecordingItem({
 
                     <div className="min-w-0 flex-1">
                         <Link href={`/recordings/${recording.id}`} className="block hover:no-underline group/link">
-                            <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate group-hover/link:text-emerald-600 dark:group-hover/link:text-emerald-400 transition-colors">
+                            <h4 className="text-base font-bold text-slate-900 dark:text-white truncate group-hover/link:text-emerald-600 dark:group-hover/link:text-emerald-400 transition-colors">
                                 {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
-                                {isVideo && <span className="mr-2 text-[10px] bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-full">فيديو</span>}
+                                {isVideo && <span className="mr-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-full">فيديو</span>}
                             </h4>
 
                             {recording.recording_coverage && recording.recording_coverage.length > 0 ? (
                                 <div className="flex flex-wrap gap-1 mt-1">
                                     {recording.recording_coverage.map((seg: any, idx: number) => (
-                                        <span key={idx} className="text-[10px] text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
+                                        <span key={idx} className="text-sm text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.2 rounded">
                                             سورة {getSurahName(seg.surah_number)} ({seg.ayah_start}-{seg.ayah_end})
                                         </span>
                                     ))}
                                 </div>
                             ) : (
                                 recording.surah_number && (
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                                    <p className="text-sm text-slate-700 dark:text-slate-300 mt-0.5">
                                         سورة {getSurahName(recording.surah_number)} ({recording.ayah_start}-{recording.ayah_end})
                                     </p>
                                 )
                             )}
 
-                            <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-400 dark:text-slate-500">
+                            <div className="flex items-center gap-3 mt-1 text-sm text-slate-700 dark:text-slate-300">
                                 {recording.recording_date?.year && <span>📅 {recording.recording_date.year}</span>}
                                 {recording.city && <span>📍 {recording.city}</span>}
                                 {recording.reciter_phases?.phase_name_ar && (
@@ -113,7 +113,7 @@ export default function RecordingItem({
                         {/* Progress Bar - Moved outside Link for better layout stability */}
                         {progress > 0 && (
                             <div className="mt-2 w-full max-w-[200px]">
-                                <div className="flex items-center justify-between text-[10px] text-emerald-600 dark:text-emerald-400 mb-1 font-medium">
+                                <div className="flex items-center justify-between text-sm text-emerald-600 dark:text-emerald-400 mb-1 font-medium">
                                     <span className="flex items-center gap-1">
                                         <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />

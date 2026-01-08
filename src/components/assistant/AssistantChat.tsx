@@ -19,6 +19,10 @@ export default function AssistantChat() {
     const [showWelcome, setShowWelcome] = useState(false);
     const { dispatch, state } = usePlayer();
 
+    // Maintenance Mode Toggle
+    const IS_MAINTENANCE = true;
+
+
     // Draggable logic
     const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
     const [isDragging, setIsDragging] = useState(false);
@@ -58,7 +62,9 @@ export default function AssistantChat() {
 
     const welcomeMessage: Message = {
         role: "assistant",
-        content: "أهلاً بك! أنا مساعدك الذكي، يمكنني مساعدتك في البحث عن التلاوات والنوادر. كيف يمكنني مساعدتك اليوم؟",
+        content: IS_MAINTENANCE
+            ? "### 🛠️ المساعد الذكي قيد التطوير\n\nنحن نعمل حالياً على تحسين وتطوير قدرات المساعد الذكي لتقديم تجربة أفضل لكم. نعتذر عن عدم توفر الدردشة في الوقت الحالي.\n\n**شكراً لصبركم وتفهمكم.**"
+            : "أهلاً بك! أنا مساعدك الذكي، يمكنني مساعدتك في البحث عن التلاوات والنوادر. كيف يمكنني مساعدتك اليوم؟",
         id: "welcome"
     };
 
@@ -289,13 +295,13 @@ export default function AssistantChat() {
                     className="fixed z-50 animate-in fade-in slide-in-from-bottom-2 duration-500"
                     style={welcomeStyle}
                 >
-                    <div className="relative bg-emerald-600 text-white px-5 py-3 rounded-2xl shadow-xl max-w-[200px] text-sm font-bold">
+                    <div className={`${IS_MAINTENANCE ? 'bg-amber-600' : 'bg-emerald-600'} text-white px-5 py-3 rounded-2xl shadow-xl max-w-[200px] text-sm font-bold`}>
                         <button
                             onClick={dismissWelcome}
                             className="absolute -top-2 -right-2 bg-slate-800 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
                         >✕</button>
-                        أهلاً بك! أنا مساعدك الذكي، يمكنني مساعدتك في البحث عن التلاوات والنوادر.
-                        <div className="absolute bottom-[-8px] md:right-6 left-1/2 md:left-auto -translate-x-1/2 md:translate-x-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] border-t-emerald-600"></div>
+                        {IS_MAINTENANCE ? "المساعد الذكي يخضع للصيانة حالياً..." : "أهلاً بك! أنا مساعدك الذكي، يمكنني مساعدتك في البحث عن التلاوات والنوادر."}
+                        <div className={`absolute bottom-[-8px] md:right-6 left-1/2 md:left-auto -translate-x-1/2 md:translate-x-0 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[8px] ${IS_MAINTENANCE ? 'border-t-amber-600' : 'border-t-emerald-600'}`}></div>
                     </div>
                 </div>
             )}
@@ -307,14 +313,21 @@ export default function AssistantChat() {
                     onMouseDown={startDragging}
                     onTouchStart={startDragging}
                     onClick={handleButtonClick}
-                    className="fixed z-50 w-14 h-14 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full shadow-lg transition-transform flex items-center justify-center group transform hover:scale-110 active:scale-95 select-none cursor-grab active:cursor-grabbing"
+                    className={`fixed z-50 w-14 h-14 ${IS_MAINTENANCE ? 'bg-amber-500 hover:bg-amber-600 shadow-amber-500/20' : 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'} text-white rounded-full shadow-lg transition-transform flex items-center justify-center group transform hover:scale-110 active:scale-95 select-none cursor-grab active:cursor-grabbing`}
                     style={floatingStyle}
                 >
                     <div className="relative pointer-events-none">
                         {showWelcome && <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-ping"></span>}
-                        <svg className="w-6 h-6 border-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-                        </svg>
+                        {IS_MAINTENANCE ? (
+                            <svg className="w-6 h-6 border-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        ) : (
+                            <svg className="w-6 h-6 border-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                            </svg>
+                        )}
                     </div>
                 </button>
             )}
@@ -326,14 +339,14 @@ export default function AssistantChat() {
                     style={chatStyle}
                 >
                     {/* Header */}
-                    <div className="bg-emerald-600 p-5 flex items-center justify-between">
+                    <div className={`${IS_MAINTENANCE ? 'bg-amber-500' : 'bg-emerald-600'} p-5 flex items-center justify-between transition-colors`}>
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm overflow-hidden">
                                 <img src="/logo.png" alt="" className="w-full h-full object-contain" />
                             </div>
                             <div className="text-white">
                                 <h3 className="font-bold">المساعد الذكي</h3>
-                                <p className="text-[10px] opacity-80 uppercase tracking-widest">Assistant Online</p>
+                                <p className="text-[10px] opacity-80 uppercase tracking-widest">{IS_MAINTENANCE ? 'Under Maintenance' : 'Assistant Online'}</p>
                             </div>
                         </div>
                         <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white">
@@ -494,25 +507,38 @@ export default function AssistantChat() {
 
                     {/* Input Area */}
                     <div className="p-4 bg-white dark:bg-slate-800 border-t border-slate-100 dark:border-slate-700">
-                        <form onSubmit={handleFormSubmit} className="relative">
-                            <input
-                                type="text"
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder="اكتب سؤالك هنا..."
-                                className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:outline-none focus:border-emerald-500"
-                                disabled={isLoading}
-                            />
-                            <button
-                                type="submit"
-                                disabled={isLoading || !input.trim()}
-                                className="absolute left-1.5 top-1.5 bottom-1.5 w-9 h-9 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-lg transition-all"
-                            >
-                                <svg className="w-4 h-4 -rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                                </svg>
-                            </button>
-                        </form>
+                        {IS_MAINTENANCE ? (
+                            <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-xl p-3 flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                </div>
+                                <p className="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                    المساعد الذكي في عطلة قصيرة لإجراء بعض التحسينات. سنعود قريباً!
+                                </p>
+                            </div>
+                        ) : (
+                            <form onSubmit={handleFormSubmit} className="relative">
+                                <input
+                                    type="text"
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="اكتب سؤالك هنا..."
+                                    className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-sm focus:outline-none focus:border-emerald-500"
+                                    disabled={isLoading}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isLoading || !input.trim()}
+                                    className="absolute left-1.5 top-1.5 bottom-1.5 w-9 h-9 flex items-center justify-center bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-200 text-white rounded-lg transition-all"
+                                >
+                                    <svg className="w-4 h-4 -rotate-90" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                                    </svg>
+                                </button>
+                            </form>
+                        )}
                     </div>
                 </div>
             )}
