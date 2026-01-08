@@ -9,6 +9,7 @@ import { addToHistory, updateLastPosition, getLastPosition } from "@/lib/history
 
 import PlayerQueue from "./PlayerQueue";
 import DownloadButton from "../offline/DownloadButton";
+import WaveformVisualizer from "./WaveformVisualizer";
 import { addDownloadedTrack, removePendingDownload } from "@/lib/download-manager";
 
 export default function AudioPlayer() {
@@ -22,8 +23,125 @@ export default function AudioPlayer() {
     const [showQueue, setShowQueue] = useState(false);
     const [showSleepMenu, setShowSleepMenu] = useState(false);
     const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+    // Moved sleepTimerEndTimeRef down to avoid conflict
+    const [showEqualizer, setShowEqualizer] = useState(false);
+    const [eqGains, setEqGains] = useState({ bass: 0, mid: 0, treble: 0 });
+    const [crossfadeEnabled, setCrossfadeEnabled] = useState(true); // Default enabled
+
+
+    // Web Audio API Refs
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null); // New Analyser Ref
+    const bassFilterRef = useRef<BiquadFilterNode | null>(null);
+    const midFilterRef = useRef<BiquadFilterNode | null>(null);
+    const trebleFilterRef = useRef<BiquadFilterNode | null>(null);
+
     const sleepTimerEndTimeRef = useRef<number | null>(null);
     const lastSaveTimeRef = useRef<number>(0);
+    const volumeFadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Helper: Fade Audio (Component Level)
+    const fadeAudio = (targetVolume: number, duration: number = 500): Promise<void> => {
+        return new Promise((resolve) => {
+            const audio = audioRef.current;
+            if (!audio) { resolve(); return; }
+
+            if (volumeFadeIntervalRef.current) clearInterval(volumeFadeIntervalRef.current);
+            if (!crossfadeEnabled) {
+                audio.volume = targetVolume;
+                resolve();
+                return;
+            }
+
+            const startVolume = audio.volume;
+            const steps = 20;
+            const stepTime = duration / steps;
+            const volumeStep = (targetVolume - startVolume) / steps;
+            let currentStep = 0;
+
+            volumeFadeIntervalRef.current = setInterval(() => {
+                currentStep++;
+                const newVolume = startVolume + (volumeStep * currentStep);
+                // Clamp volume between 0 and 1
+                audio.volume = Math.max(0, Math.min(1, newVolume));
+
+                if (currentStep >= steps) {
+                    if (volumeFadeIntervalRef.current) clearInterval(volumeFadeIntervalRef.current);
+                    audio.volume = targetVolume; // Ensure final value is exact
+                    resolve();
+                }
+            }, stepTime);
+        });
+    };
+
+
+    // Initialize Audio Context and Filters
+    useEffect(() => {
+        if (!audioRef.current || sourceNodeRef.current) return;
+
+        try {
+            const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+            if (!AudioContext) return;
+
+            const ctx = new AudioContext();
+            audioContextRef.current = ctx;
+
+            const source = ctx.createMediaElementSource(audioRef.current);
+            sourceNodeRef.current = source;
+
+            // Create Filters
+            const bass = ctx.createBiquadFilter();
+            bass.type = 'lowshelf';
+            bass.frequency.value = 200; // Bass below 200Hz
+
+            const mid = ctx.createBiquadFilter();
+            mid.type = 'peaking';
+            mid.frequency.value = 1000; // Mid around 1kHz
+            mid.Q.value = 1;
+
+            const treble = ctx.createBiquadFilter();
+            treble.type = 'highshelf';
+            treble.frequency.value = 3000; // Treble above 3kHz
+
+            // Create Analyser
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 64; // Small size for visualizer
+            analyserRef.current = analyser;
+
+            // Connect Graph: Source -> Analyser -> Bass -> Mid -> Treble -> Destination
+            // Note: Analyser can be anywhere, but putting it early catches raw audio (pre-EQ) or after (post-EQ).
+            // Let's put it pre-EQ for consistent visual even if EQ changes.
+            source.connect(analyser); // Connect source to analyser
+            analyser.connect(bass); // Connect analyser to rest of chain
+
+            // source.connect(bass); // OLD connection
+            bass.connect(mid);
+            mid.connect(treble);
+            treble.connect(ctx.destination);
+
+            bassFilterRef.current = bass;
+            midFilterRef.current = mid;
+            trebleFilterRef.current = treble;
+
+        } catch (error) {
+            console.error("Web Audio API Error:", error);
+        }
+    }, [audioRef]);
+
+    // Update Filter Gains when state changes
+    useEffect(() => {
+        if (bassFilterRef.current) bassFilterRef.current.gain.value = eqGains.bass;
+        if (midFilterRef.current) midFilterRef.current.gain.value = eqGains.mid;
+        if (trebleFilterRef.current) trebleFilterRef.current.gain.value = eqGains.treble;
+    }, [eqGains]);
+
+    // Resume AudioContext on Play (Browser Autoplay Policy)
+    useEffect(() => {
+        if (isPlaying && audioContextRef.current?.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
+    }, [isPlaying]);
 
     // Keyboard Shortcuts
     useEffect(() => {
@@ -56,9 +174,12 @@ export default function AudioPlayer() {
     }, [currentTrack, dispatch, showQueue]);
 
     // Unified Playback Control
+    // Unified Playback Control
     useEffect(() => {
         const audio = audioRef.current;
         if (!audio || !currentTrack) return;
+
+
 
         const handlePlayback = async () => {
             // Normalize URLs to avoid redundant loads
@@ -80,6 +201,13 @@ export default function AudioPlayer() {
                     console.warn("AudioPlayer: Empty source received for track:", currentTrack.id);
                     return;
                 }
+
+                // Fade out old track if playing
+                if (!audio.paused && crossfadeEnabled) {
+                    // Quick fade out old source doesn't work well because source changes immediately
+                    // But we can ensure volume starts at 0 for new track
+                }
+
                 console.log("AudioPlayer: Changing source to:", normalizedTarget);
                 audio.src = normalizedTarget;
                 audio.load(); // Force load new source
@@ -90,22 +218,44 @@ export default function AudioPlayer() {
                     audio.currentTime = lastPos;
                 }
 
+                // Start with 0 volume for fade in
+                if (crossfadeEnabled && isPlaying) {
+                    audio.volume = 0;
+                }
+
             } else if (isPlaying && audio.ended) {
                 // If same source but ended, reset to start
                 audio.currentTime = 0;
+                if (crossfadeEnabled) audio.volume = 0;
             }
 
             // 2. Manage Playback State
             if (isPlaying) {
                 try {
-                    await audio.play();
+                    // If previously paused or just loaded, we want to play
+                    if (audio.paused) {
+                        await audio.play();
+                        // Fade In to target volume
+                        fadeAudio(volume, 1000);
+                    } else {
+                        // Already playing, just ensure volume is correct (e.g. if we cancelled a fade out)
+                        // But don't interrupt a fade in progress unless volume changed?
+                        // Simple approach: trigger fade to target volume to be safe
+                        fadeAudio(volume, 500);
+                    }
                 } catch (err: any) {
                     if (err.name !== "AbortError") {
                         console.error("Audio playback error:", err);
                     }
                 }
             } else {
-                audio.pause();
+                // We want to pause. Fade out first?
+                // Problem: isPlaying is already false here. The UI has updated to "Play" icon.
+                // We should fade out then pause.
+                if (!audio.paused) {
+                    await fadeAudio(0, 400);
+                    audio.pause();
+                }
             }
         };
 
@@ -151,6 +301,21 @@ export default function AudioPlayer() {
 
     const togglePlay = () => {
         dispatch({ type: "TOGGLE_PLAY_PAUSE" });
+    };
+
+    // Smart Navigation Handlers with Fade Out
+    const handleNextTrack = async () => {
+        if (isPlaying && crossfadeEnabled) {
+            await fadeAudio(0, 500);
+        }
+        dispatch({ type: "NEXT_TRACK" });
+    };
+
+    const handlePrevTrack = async () => {
+        if (isPlaying && crossfadeEnabled) {
+            await fadeAudio(0, 500);
+        }
+        dispatch({ type: "PREV_TRACK" });
     };
 
     // Load volume from preferences on mount
@@ -240,6 +405,7 @@ export default function AudioPlayer() {
     const audioElement = (
         <audio
             ref={audioRef}
+            crossOrigin="anonymous"
             onTimeUpdate={handleTimeUpdate}
             onEnded={handleEnded}
             onLoadedMetadata={handleTimeUpdate}
@@ -368,9 +534,22 @@ export default function AudioPlayer() {
 
                     {/* Track Info */}
                     <div className="flex items-center gap-3 w-full md:w-1/3 min-w-0">
-                        <div className={`hidden lg:flex w-10 h-10 rounded-lg items-center justify-center font-bold text-xs shrink-0 ${isLean ? "bg-slate-800 text-emerald-400" : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
+                        <div className={`flex w-10 h-10 rounded-lg items-center justify-center font-bold text-xs shrink-0 relative overflow-hidden ${isLean ? "bg-slate-800 text-emerald-400" : "bg-emerald-100 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
                             }`}>
-                            {currentTrack.surahNumber || "🔊"}
+
+                            {/* Visualizer Background */}
+                            <div className="absolute inset-x-0 bottom-0 top-0 z-0">
+                                <WaveformVisualizer
+                                    analyser={analyserRef.current}
+                                    isPlaying={isPlaying}
+                                    color={isLean ? "#34d399" : "#10b981"} // emerald-400 : emerald-500
+                                />
+                            </div>
+
+                            {/* Surah Number Overlay */}
+                            <span className="relative z-10 drop-shadow-sm">
+                                {currentTrack.surahNumber || "🔊"}
+                            </span>
                         </div>
                         <div className="min-w-0 overflow-hidden">
                             <h4 className={`font-bold truncate text-xs md:text-base ${isLean ? "text-white" : "text-slate-900 dark:text-white"}`}>
@@ -383,7 +562,7 @@ export default function AudioPlayer() {
                         {/* Mobile Main Controls (Inline with Info) */}
                         <div className="flex md:hidden items-center justify-end gap-3 ml-auto shrink-0">
                             <button
-                                onClick={() => dispatch({ type: "PREV_TRACK" })}
+                                onClick={handlePrevTrack}
                                 className={`transition-colors ${isLean ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" /></svg>
@@ -401,7 +580,7 @@ export default function AudioPlayer() {
                             </button>
 
                             <button
-                                onClick={() => dispatch({ type: "NEXT_TRACK" })}
+                                onClick={handleNextTrack}
                                 className={`transition-colors ${isLean ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}
                             >
                                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
@@ -412,7 +591,7 @@ export default function AudioPlayer() {
                     {/* Desktop Main Controls (Centered) */}
                     <div className="hidden md:flex items-center justify-center gap-6 w-1/3 shrink-0">
                         <button
-                            onClick={() => dispatch({ type: "PREV_TRACK" })}
+                            onClick={handlePrevTrack}
                             className={`transition-colors ${isLean ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}
                             title="السابق"
                         >
@@ -432,13 +611,15 @@ export default function AudioPlayer() {
                         </button>
 
                         <button
-                            onClick={() => dispatch({ type: "NEXT_TRACK" })}
+                            onClick={handleNextTrack}
                             className={`transition-colors ${isLean ? "text-slate-400 hover:text-white" : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"}`}
                             title="التالي"
                         >
                             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" /></svg>
                         </button>
                     </div>
+
+
                 </div>
 
                 {/* Extra & Volume & Close - Flex container management */}
@@ -459,6 +640,7 @@ export default function AudioPlayer() {
                                 reciterName={currentTrack.reciterName}
                                 audioUrl={currentTrack.src}
                                 surahNumber={currentTrack.surahNumber}
+                                minimal={true}
                             />
                         </div>
 
@@ -503,6 +685,76 @@ export default function AudioPlayer() {
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                         </button>
+
+                        {/* Equalizer Button (Moved here for mobile support) */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowEqualizer(!showEqualizer)}
+                                className={`p-1.5 rounded-lg transition-colors ${showEqualizer ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" : "text-slate-400 hover:text-emerald-500"}`}
+                                title="المعادل الصوتي"
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                                </svg>
+                            </button>
+
+                            {/* EQ Popup - Positioned carefully */}
+                            {showEqualizer && (
+                                <div className="absolute bottom-full mb-4 left-1/2 -translate-x-1/2 md:left-auto md:right-0 md:translate-x-0 bg-white dark:bg-slate-900 p-4 rounded-xl shadow-xl border border-slate-200 dark:border-slate-800 w-48 z-50">
+                                    <h4 className="text-center font-bold text-sm mb-3">المعادل الصوتي</h4>
+                                    <div className="space-y-4">
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px] text-slate-500">
+                                                <span>Bass</span>
+                                                <span>{eqGains.bass}dB</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-10"
+                                                max="10"
+                                                value={eqGains.bass}
+                                                onChange={(e) => setEqGains(p => ({ ...p, bass: Number(e.target.value) }))}
+                                                className="w-full accent-emerald-500 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px] text-slate-500">
+                                                <span>Mid</span>
+                                                <span>{eqGains.mid}dB</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-10"
+                                                max="10"
+                                                value={eqGains.mid}
+                                                onChange={(e) => setEqGains(p => ({ ...p, mid: Number(e.target.value) }))}
+                                                className="w-full accent-emerald-500 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <div className="space-y-1">
+                                            <div className="flex justify-between text-[10px] text-slate-500">
+                                                <span>Treble</span>
+                                                <span>{eqGains.treble}dB</span>
+                                            </div>
+                                            <input
+                                                type="range"
+                                                min="-10"
+                                                max="10"
+                                                value={eqGains.treble}
+                                                onChange={(e) => setEqGains(p => ({ ...p, treble: Number(e.target.value) }))}
+                                                className="w-full accent-emerald-500 h-1 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer"
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setEqGains({ bass: 0, mid: 0, treble: 0 })}
+                                            className="w-full py-1 text-xs text-slate-400 hover:text-emerald-500 border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+                                        >
+                                            إعادة ضبط (Reset)
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
 
                         {/* Speed Dropdown */}
                         <div className="relative group ml-1">
@@ -556,6 +808,7 @@ export default function AudioPlayer() {
                                 reciterName={currentTrack.reciterName}
                                 audioUrl={currentTrack.src}
                                 surahNumber={currentTrack.surahNumber}
+                                minimal={true}
                             />
                         </div>
 
