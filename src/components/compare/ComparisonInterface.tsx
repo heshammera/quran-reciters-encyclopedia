@@ -299,12 +299,12 @@ export default function ComparisonInterface() {
                                             className={cn(
                                                 "flex-1 relative px-6 py-3 rounded-2xl font-bold text-sm transition-all duration-300 flex items-center justify-center gap-2.5 shadow-lg active:scale-95 overflow-hidden group/btn",
                                                 state.currentTrack?.id === rec.id
-                                                    ? "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50"
-                                                    : "bg-gradient-to-r from-slate-100 to-slate-50 dark:from-slate-700 dark:to-slate-600 text-slate-700 dark:text-white hover:from-blue-600 hover:to-indigo-600 hover:text-white dark:hover:from-blue-600 dark:hover:to-indigo-600 shadow-slate-200/50 dark:shadow-slate-900/50"
+                                                    ? "bg-emerald-600 text-white shadow-emerald-500/30 hover:shadow-emerald-500/50"
+                                                    : "bg-white dark:bg-slate-700 border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-white hover:border-emerald-500 hover:bg-emerald-50 hover:text-emerald-700 dark:hover:bg-slate-600 shadow-slate-200/50 dark:shadow-slate-900/50"
                                             )}
                                         >
-                                            {/* Button gradient overlay */}
-                                            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700" />
+                                            {/* Button gradient overlay for hover */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600/10 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 pointer-events-none" />
 
                                             <span className="relative z-10 text-lg">
                                                 {state.currentTrack?.id === rec.id ? '⏸️' : '▶️'}
@@ -326,6 +326,6 @@ export default function ComparisonInterface() {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
