@@ -1,17 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 import SearchBar from "@/components/search/SearchBar";
-import ReciterCard from "@/components/reciters/ReciterCard";
+import RecitersGrid from "@/components/reciters/RecitersGrid";
 import HomeCollections from "@/components/home/HomeCollections";
 import HomeRecordings from "@/components/home/HomeRecordings";
 import { Database } from "@/types/database";
 
-type Reciter = Database["public"]["Tables"]["reciters"]["Row"];
+type Reciter = Database["public"]["Tables"]["reciters"]["Row"] & {
+  recordings_count?: number;
+};
 
 async function getReciters(): Promise<Reciter[] | null> {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
+  // Fetch reciters with recording counts for smart filtering
+  const { data: reciters, error } = await supabase
     .from("reciters")
     .select("*")
     .order("name_ar");
@@ -21,7 +24,24 @@ async function getReciters(): Promise<Reciter[] | null> {
     return null;
   }
 
-  return data || [];
+  if (!reciters) return [];
+
+  // Get recording counts for each reciter
+  const recitersWithCounts = await Promise.all(
+    reciters.map(async (reciter) => {
+      const { count } = await supabase
+        .from("recordings")
+        .select("*", { count: "exact", head: true })
+        .eq("reciter_id", reciter.id);
+
+      return {
+        ...reciter,
+        recordings_count: count || 0,
+      };
+    })
+  );
+
+  return recitersWithCounts;
 }
 
 async function getFeaturedRecordings() {
@@ -123,7 +143,7 @@ export default async function Home() {
         <div className="container mx-auto px-4 relative z-10 text-center space-y-8">
           <div className="space-y-4">
             <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-              أرشيف <span className="text-emerald-600 dark:text-emerald-400">تلاوات</span> القراء
+              أرشيف <span className="text-emerald-600 dark:text-emerald-400">موسوعة</span> <span className="text-slate-900 dark:text-white">القراء</span>
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
               أكبر مشروع توثيقي للنوادر القرآنية، يجمع آلاف التسجيلات النادرة لعمالقة القراء في العالم الإسلامي.
@@ -173,13 +193,9 @@ export default async function Home() {
               <p className="text-slate-500">لا يوجد قراء مسجلون حالياً</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-6">
-              {reciters.map((reciter) => (
-                <ReciterCard key={reciter.id} reciter={reciter} />
-              ))}
-            </div>
+            <RecitersGrid reciters={reciters} />
           )}
-        </section >
+        </section>
 
         {/* Rarities & Latest Grid */}
         <HomeRecordings featured={featured || []} latest={latest || []} />

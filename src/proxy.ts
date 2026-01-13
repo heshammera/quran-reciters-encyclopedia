@@ -1,11 +1,12 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function proxy(request: NextRequest) {
-    let supabaseResponse = NextResponse.next({
-        request,
-    });
+    let response = NextResponse.next({
+        request: {
+            headers: request.headers,
+        },
+    })
 
     const supabase = createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,40 +14,48 @@ export async function proxy(request: NextRequest) {
         {
             cookies: {
                 getAll() {
-                    return request.cookies.getAll();
+                    return request.cookies.getAll()
                 },
-                setAll(cookiesToSet: Array<{ name: string; value: string; options: Record<string, any> }>) {
-                    cookiesToSet.forEach(({ name, value, options }) => {
-                        request.cookies.set(name, value);
-                        supabaseResponse.cookies.set(name, value, options);
-                    });
+                setAll(cookiesToSet) {
+                    cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+                    response = NextResponse.next({
+                        request,
+                    })
+                    cookiesToSet.forEach(({ name, value, options }) =>
+                        response.cookies.set(name, value, options)
+                    )
                 },
             },
         }
-    );
+    )
 
-    // Refresh session
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
+    // Refresh session if expired - this is critical for preventing refresh_token_not_found errors
+    const { data: { user }, error } = await supabase.auth.getUser()
 
-    // Protect admin routes
-    if (request.nextUrl.pathname.startsWith("/admin") && !request.nextUrl.pathname.startsWith("/admin/login")) {
-        if (!user) {
-            const redirectUrl = new URL("/admin/login", request.url);
-            return NextResponse.redirect(redirectUrl);
-        }
+    // If we get an auth error, clear the cookies to prevent repeated errors
+    if (error) {
+        response.cookies.delete('sb-access-token')
+        response.cookies.delete('sb-refresh-token')
+        // Clear all Supabase auth cookies
+        request.cookies.getAll().forEach(cookie => {
+            if (cookie.name.startsWith('sb-')) {
+                response.cookies.delete(cookie.name)
+            }
+        })
     }
 
-    // Redirect to admin if already logged in and trying to access login
-    if (request.nextUrl.pathname === "/admin/login" && user) {
-        const redirectUrl = new URL("/admin", request.url);
-        return NextResponse.redirect(redirectUrl);
-    }
-
-    return supabaseResponse;
+    return response
 }
 
 export const config = {
-    matcher: ["/admin/:path*"],
-};
+    matcher: [
+        /*
+         * Match all request paths except for the ones starting with:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder
+         */
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    ],
+}

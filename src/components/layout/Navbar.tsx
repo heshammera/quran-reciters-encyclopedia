@@ -1,4 +1,4 @@
-
+﻿
 "use client";
 
 import { useState } from "react";
@@ -40,15 +40,16 @@ export default function Navbar() {
                         <div className="relative h-10 w-10 md:h-12 md:w-12 overflow-hidden bg-white rounded-lg border border-slate-100 dark:border-slate-800 shadow-sm transition-transform hover:scale-105">
                             <img
                                 src="/logo.png"
-                                alt="موسوعة قراء القرآن"
+                                alt="موسوعة القراء"
                                 className="w-full h-full object-contain p-0.5"
                             />
                         </div>
                         <span
-                            className="font-bold text-2xl md:text-3xl text-emerald-700 dark:text-emerald-400 hidden sm:inline-block pt-1"
+                            className="font-bold text-2xl md:text-3xl hidden sm:inline-block pt-1"
                             style={{ fontFamily: "'Aref Ruqaa', serif" }}
                         >
-                            مَوْسُوعَةُ قُرَّاءِ الْقُرْآنِ
+                            <span className="text-emerald-700 dark:text-emerald-400">موسوعة</span>{" "}
+                            <span className="text-slate-900 dark:text-white">القراء</span>
                         </span>
                     </Link>
                 </div>

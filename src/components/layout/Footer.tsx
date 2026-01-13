@@ -10,7 +10,7 @@ export default function Footer() {
                 <div className="flex items-center gap-4 md:gap-6">
                     <div className="flex items-center gap-2">
                         <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
-                        <span className="font-bold text-lg text-white">موسوعة القرّاء</span>
+                        <span className="font-bold text-lg text-white">موسوعة القراء</span>
                     </div>
 
                     <span className="hidden md:inline text-slate-700">|</span>

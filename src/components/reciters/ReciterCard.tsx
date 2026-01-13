@@ -9,7 +9,7 @@ interface ReciterCardProps {
         id: string;
         name_ar: string;
         image_url?: string | null;
-        bio_short?: string; // fallback or derived if needed
+        bio_short?: string;
     };
 }
 
@@ -43,8 +43,8 @@ export default function ReciterCard({ reciter }: ReciterCardProps) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
             {/* Content */}
-            <div className="absolute bottom-0 left-0 right-0 p-4 z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
-                <h3 className="text-xl font-bold text-white mb-1 shadow-sm">{reciter.name_ar}</h3>
+            <div className="absolute bottom-0 left-0 right-0 p-3 z-20 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                <h3 className="text-base md:text-lg font-bold text-white mb-1 shadow-sm line-clamp-2">{reciter.name_ar}</h3>
                 <div className="h-0.5 w-12 bg-emerald-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-100" />
             </div>
 
