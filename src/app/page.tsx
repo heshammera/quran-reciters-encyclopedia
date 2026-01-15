@@ -142,7 +142,7 @@ export default async function Home() {
 
         <div className="container mx-auto px-4 relative z-10 text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            <h1 className="text-3xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
               أرشيف <span className="text-emerald-600 dark:text-emerald-400">موسوعة</span> <span className="text-slate-900 dark:text-white">القراء</span>
             </h1>
             <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
