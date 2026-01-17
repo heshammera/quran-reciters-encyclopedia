@@ -39,6 +39,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
         title: initialData?.title || "",
         section_id: initialData?.section_id || "",
         reciter_phase_id: initialData?.reciter_phase_id || "",
+        album: initialData?.album || "",
         surah_number: initialData?.surah_number || 1,
         ayah_start: initialData?.ayah_start || 1,
         ayah_end: initialData?.ayah_end || 1,
@@ -168,6 +169,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
     const citySuggestions = useAutocomplete('city');
     const publisherSuggestions = useAutocomplete('publisher');
     const sourceSuggestions = useAutocomplete('source_description');
+    const albumSuggestions = useAutocomplete('album');
     const timePeriodSuggestions = useNestedAutocomplete('recording_date', 'time_period');
 
     // DEBUG: Check bucket config
@@ -522,6 +524,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                 reciter_id: formData.reciter_id,
                 section_id: formData.section_id,
                 reciter_phase_id: formData.reciter_phase_id || null,
+                album: formData.album?.trim() || null,
                 city: formData.city,
                 recording_date: {
                     year: formData.recording_year,
@@ -537,7 +540,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                 is_published: formData.is_published,
                 is_featured: formData.is_featured,
 
-                // \u0627\u0644\u062d\u0642\u0648\u0644 \u0627\u0644\u062c\u062f\u064a\u062f\u0629
+                // الحقول الجديدة
                 venue: formData.venue?.trim() || null,
                 publisher: formData.publisher?.trim() || null,
                 recording_details: formData.recording_details?.trim() || null,
@@ -638,6 +641,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                     reciter_id: formData.reciter_id,
                     section_id: formData.section_id,
                     reciter_phase_id: formData.reciter_phase_id,
+                    album: formData.album,
                     city: formData.city,
                     time_period: formData.time_period,
                     source_description: formData.source_description,
@@ -646,7 +650,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                     rarity_classification: formData.rarity_classification,
                     is_published: formData.is_published,
                     is_featured: formData.is_featured,
-                    // \u0627\u0644\u062d\u0642\u0648\u0644 \u0627\u0644\u062c\u062f\u064a\u062f\u0629 - \u064a\u062a\u0645 \u062d\u0641\u0638\u0647\u0627 \u0644\u0644\u0627\u0633\u062a\u062e\u062f\u0627\u0645 \u0641\u064a \u0627\u0644\u062a\u0633\u062c\u064a\u0644 \u0627\u0644\u0642\u0627\u062f\u0645
+                    // الحقول الجديدة - يتم حفظها للاستخدام في التسجيل القادم
                     venue: formData.venue,
                     publisher: formData.publisher,
                     // Note: title, surah, ayahs, url, duration, recording_details are intentionally excluded
@@ -779,19 +783,21 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                                 </select>
                             </div>
 
-                            {phases.length > 0 && (
-                                <div>
-                                    <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الفترة الزمنية للقارئ (اختياري)</label>
-                                    <select
-                                        value={formData.reciter_phase_id}
-                                        onChange={(e) => setFormData({ ...formData, reciter_phase_id: e.target.value })}
-                                        className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
-                                    >
-                                        <option value="">بدون تحديد</option>
-                                        {phases.map(p => <option key={p.id} value={p.id}>{p.phase_name_ar}</option>)}
-                                    </select>
-                                </div>
-                            )}
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الألبوم</label>
+                                <input
+                                    type="text"
+                                    list="album-suggestions"
+                                    value={formData.album}
+                                    onChange={(e) => setFormData({ ...formData, album: e.target.value })}
+                                    className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
+                                    placeholder="مثال: سلسلة رمضان 1420هـ"
+                                />
+                                <datalist id="album-suggestions">
+                                    {albumSuggestions.map((s, i) => <option key={i} value={s} />)}
+                                </datalist>
+                                <p className="text-xs text-slate-400 mt-1">اسم الألبوم أو المجموعة التي تنتمي لها التلاوة</p>
+                            </div>
                         </div>
                     </div>
 

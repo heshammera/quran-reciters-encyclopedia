@@ -100,6 +100,7 @@ export interface Database {
           reciter_id: string;
           reciter_phase_id: string | null;
           section_id: string;
+          album: string | null;
           surah_number: number;
           ayah_start: number;
           ayah_end: number;
@@ -125,6 +126,7 @@ export interface Database {
           reciter_id: string;
           reciter_phase_id?: string | null;
           section_id: string;
+          album?: string | null;
           surah_number: number;
           ayah_start: number;
           ayah_end: number;
@@ -149,6 +151,7 @@ export interface Database {
           reciter_id?: string;
           reciter_phase_id?: string | null;
           section_id?: string;
+          album?: string | null;
           surah_number?: number;
           ayah_start?: number;
           ayah_end?: number;

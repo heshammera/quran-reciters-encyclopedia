@@ -217,8 +217,16 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
 
                                         <div className="space-y-4">
                                             {/* Source & Quality */}
-                                            {(recording.source_description || recording.quality_level) && (
+                                            {(recording.source_description || recording.quality_level || recording.album) && (
                                                 <div className="text-xs text-slate-600 dark:text-slate-400 space-y-2 pb-4 border-b border-slate-200 dark:border-slate-700">
+                                                    {recording.album && (
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="font-bold text-slate-700 dark:text-slate-300">الألبوم:</span>
+                                                            <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 px-2 py-1 rounded font-medium">
+                                                                📀 {recording.album}
+                                                            </span>
+                                                        </div>
+                                                    )}
                                                     {recording.source_description && (
                                                         <p className="leading-relaxed bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-100 dark:border-slate-700/50">
                                                             {recording.source_description}

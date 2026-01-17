@@ -150,10 +150,13 @@ export default function RecordingItem({
                                         {recording.publisher}
                                     </span>
                                 )}
-                                {/* المرحلة الزمنية للقارئ */}
-                                {recording.reciter_phases?.phase_name_ar && (
-                                    <span className="bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded text-xs font-medium">
-                                        {recording.reciter_phases.phase_name_ar}
+                                {/* الألبوم */}
+                                {recording.album && (
+                                    <span className="text-xs text-slate-700 dark:text-slate-300 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded flex items-center gap-1">
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                                        </svg>
+                                        {recording.album}
                                     </span>
                                 )}
                             </div>
