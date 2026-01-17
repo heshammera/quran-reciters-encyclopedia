@@ -99,13 +99,8 @@ export default function SessionGenerator() {
     };
 
     return (
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-8">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                <span>🎧</span>
-                جلسة استماع
-            </h2>
-
-            <div className="space-y-6">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg border border-slate-200 dark:border-slate-700 p-6">
+            <div className="space-y-5">
                 <div>
                     <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                         اختر القارئ (اختياري)
@@ -126,7 +121,7 @@ export default function SessionGenerator() {
                     <label className="block text-sm font-medium mb-2 text-slate-700 dark:text-slate-300">
                         مدة الجلسة التقريبية
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                         {[30, 60, 90, 120].map((m) => (
                             <button
                                 key={m}

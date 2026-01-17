@@ -13,7 +13,7 @@ export default function NewRecordingPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                     </svg>
                 </Link>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+                <h1 className="text-xl font-bold text-slate-900 dark:text-white">
                     إضافة تسجيل جديد
                 </h1>
             </div>

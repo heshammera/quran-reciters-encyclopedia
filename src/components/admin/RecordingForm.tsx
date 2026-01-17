@@ -756,7 +756,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                     <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
                         <h3 className="font-bold text-slate-900 dark:text-white border-b pb-2">معلومات أساسية</h3>
 
-                        <div className="grid grid-cols-1 gap-4">
+                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">القارئ *</label>
                                 <select
@@ -783,7 +783,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                                 </select>
                             </div>
 
-                            <div>
+                            <div className="col-span-2">
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الألبوم</label>
                                 <input
                                     type="text"
@@ -805,8 +805,8 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                     <div className="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
                         <h3 className="font-bold text-slate-900 dark:text-white border-b pb-2">معلومات التلاوة</h3>
 
-                        {/* الدولة - المدينة (صف واحد) */}
-                        <div className="grid grid-cols-2 gap-4">
+                        {/* الدولة - المدينة - المكان التفصيلي (صف واحد) */}
+                        <div className="grid grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الدولة *</label>
                                 <input
@@ -832,10 +832,7 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                                 />
                                 <p className="text-xs text-slate-400 mt-1">اسم المدينة</p>
                             </div>
-                        </div>
 
-                        {/* المكان التفصيلي - الفترة الزمنية (صف واحد) */}
-                        <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">المكان التفصيلي</label>
                                 <input
@@ -850,25 +847,10 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                                     {venueSuggestions.map((s, i) => <option key={i} value={s} />)}
                                 </datalist>
                             </div>
-
-                            <div>
-                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الفترة الزمنية</label>
-                                <input
-                                    type="text"
-                                    list="time-period-suggestions"
-                                    value={formData.time_period}
-                                    onChange={(e) => setFormData({ ...formData, time_period: e.target.value })}
-                                    className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
-                                    placeholder="الخمسينيات"
-                                />
-                                <datalist id="time-period-suggestions">
-                                    {timePeriodSuggestions.map((s, i) => <option key={i} value={s} />)}
-                                </datalist>
-                            </div>
                         </div>
 
-                        {/* السنة - الشهر - اليوم (صف واحد) */}
-                        <div className="grid grid-cols-3 gap-4">
+                        {/* السنة - الشهر - اليوم - الفترة الزمنية (صف واحد) */}
+                        <div className="grid grid-cols-4 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">السنة</label>
                                 <input
@@ -926,6 +908,22 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                                         <option key={d} value={d}>{d}</option>
                                     ))}
                                 </select>
+                            </div>
+
+
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">الفترة الزمنية</label>
+                                <input
+                                    type="text"
+                                    list="time-period-suggestions"
+                                    value={formData.time_period}
+                                    onChange={(e) => setFormData({ ...formData, time_period: e.target.value })}
+                                    className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
+                                    placeholder="الخمسينيات"
+                                />
+                                <datalist id="time-period-suggestions">
+                                    {timePeriodSuggestions.map((s, i) => <option key={i} value={s} />)}
+                                </datalist>
                             </div>
                         </div>
 
@@ -1000,31 +998,32 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                             </div>
                         </div>
 
-                        {/* Archive ID (صف واحد) */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Archive ID</label>
-                            <input
-                                type="text"
-                                value={formData.archival_id}
-                                onChange={(e) => setFormData({ ...formData, archival_id: e.target.value })}
-                                className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600 font-mono text-sm"
-                                placeholder="e.g. MIN-MUR-001"
-                            />
-                        </div>
+                        {/* Archive ID - المدة (صف واحد) */}
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">Archive ID</label>
+                                <input
+                                    type="text"
+                                    value={formData.archival_id}
+                                    onChange={(e) => setFormData({ ...formData, archival_id: e.target.value })}
+                                    className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600 font-mono text-sm"
+                                    placeholder="e.g. MIN-MUR-001"
+                                />
+                            </div>
 
-                        {/* المدة (hidden but needed for logic/validation if required) */}
-                        <div>
-                            <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">المدة (دقيقة)</label>
-                            <input
-                                type="number"
-                                value={formData.duration_seconds ? Math.round(formData.duration_seconds / 60) : ""}
-                                onChange={(e) => setFormData({
-                                    ...formData,
-                                    duration_seconds: e.target.value ? parseInt(e.target.value) * 60 : 0
-                                })}
-                                className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
-                                placeholder="45"
-                            />
+                            <div>
+                                <label className="block text-sm font-medium mb-1 text-slate-700 dark:text-slate-300">المدة (دقيقة)</label>
+                                <input
+                                    type="number"
+                                    value={formData.duration_seconds ? Math.round(formData.duration_seconds / 60) : ""}
+                                    onChange={(e) => setFormData({
+                                        ...formData,
+                                        duration_seconds: e.target.value ? parseInt(e.target.value) * 60 : 0
+                                    })}
+                                    className="w-full p-2 border rounded dark:bg-slate-700 bg-white dark:border-slate-600"
+                                    placeholder="45"
+                                />
+                            </div>
                         </div>
 
                     </div>
@@ -1263,6 +1262,6 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
                 </button>
             </div>
 
-        </form>
+        </form >
     );
 }

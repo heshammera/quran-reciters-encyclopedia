@@ -568,7 +568,7 @@ export default function AudioPlayer() {
                     {showQueue && (
                         <div className="container mx-auto px-4 relative z-20">
                             <div className="absolute bottom-0 right-0 left-0">
-                                <PlayerQueue />
+                                <PlayerQueue onClose={() => setShowQueue(false)} />
                             </div>
                         </div>
                     )}

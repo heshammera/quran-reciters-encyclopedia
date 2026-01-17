@@ -5,7 +5,7 @@ import { Track } from "@/types/player";
 import { formatTime } from "@/lib/utils";
 import { Reorder, useDragControls } from "framer-motion";
 import { getHistory, clearHistory as clearHistoryStore, HistoryEntry } from "@/lib/history-utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface QueueItemProps {
     track: Track;
@@ -67,19 +67,39 @@ const QueueItem = ({ track, isCurrent, playTrack, removeFromQueue, index }: Queu
     );
 };
 
-export default function PlayerQueue() {
+export default function PlayerQueue({ onClose }: { onClose?: () => void }) {
     const { state, dispatch, removeFromQueue, playTrack, clearQueue } = usePlayer();
     const { queue, currentTrack } = state;
 
     // UI State
     const [activeTab, setActiveTab] = useState<'queue' | 'history'>('queue');
     const [history, setHistory] = useState<HistoryEntry[]>([]);
+    const queueRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         if (activeTab === 'history') {
             setHistory(getHistory());
         }
     }, [activeTab, currentTrack]); // Refresh when track changes too
+
+    // Close queue when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (queueRef.current && !queueRef.current.contains(event.target as Node)) {
+                onClose?.();
+            }
+        };
+
+        // Add event listener with slight delay to avoid immediate close
+        const timeoutId = setTimeout(() => {
+            document.addEventListener('mousedown', handleClickOutside);
+        }, 100);
+
+        return () => {
+            clearTimeout(timeoutId);
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [onClose]);
 
     const handleClearHistory = () => {
         if (confirm("هل تريد مسح سجل الاستماع؟")) {
@@ -104,7 +124,7 @@ export default function PlayerQueue() {
     // For now, let's just render the UI and I will update HistoryEntry in next step.
 
     return (
-        <div className="absolute bottom-full left-0 w-full md:w-[450px] md:left-4 mb-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[70vh] flex flex-col z-[100]">
+        <div ref={queueRef} className="absolute bottom-full left-0 w-full md:w-[450px] md:left-4 mb-4 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-[70vh] flex flex-col z-[100]">
             {/* Header / Tabs */}
             <div className="flex items-center border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
                 <button

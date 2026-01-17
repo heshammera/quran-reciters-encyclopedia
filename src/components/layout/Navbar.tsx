@@ -45,7 +45,7 @@ export default function Navbar() {
                             />
                         </div>
                         <span
-                            className="font-bold text-2xl md:text-3xl hidden sm:inline-block pt-1"
+                            className="font-bold text-2xl md:text-3xl hidden sm:inline-block pt-1 whitespace-nowrap"
                             style={{ fontFamily: "'Aref Ruqaa', serif" }}
                         >
                             <span className="text-emerald-700 dark:text-emerald-400">موسوعة</span>{" "}
@@ -55,12 +55,12 @@ export default function Navbar() {
                 </div>
 
                 {/* Desktop Links */}
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden md:flex items-center gap-2">
                     {links.map((link) => (
                         <Link
                             key={link.href}
                             href={link.href}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors ${pathname === link.href
+                            className={`px-4 py-2 rounded-xl text-sm font-bold transition-colors whitespace-nowrap ${pathname === link.href
                                 ? "bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
                                 : "text-slate-600 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                                 }`}

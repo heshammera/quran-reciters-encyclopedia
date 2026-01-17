@@ -204,3 +204,57 @@ export async function getReciterVideos(reciterId: string) {
 
     return data || [];
 }
+
+export async function getRecordingsByCity(reciterId: string, city: string) {
+    const { data } = await supabase
+        .from("recordings")
+        .select(`
+            *,
+            section:sections(name_ar, slug),
+            media_files(*),
+            recording_coverage(*)
+        `)
+        .eq("reciter_id", reciterId)
+        .eq("city", city)
+        .eq("is_published", true)
+        .order("recording_date->year", { ascending: false, nullsFirst: false })
+        .order("surah_number", { ascending: true });
+
+    return data || [];
+}
+
+export async function getRecordingsByYear(reciterId: string, year: number) {
+    const { data } = await supabase
+        .from("recordings")
+        .select(`
+            *,
+            section:sections(name_ar, slug),
+            media_files(*),
+            recording_coverage(*)
+        `)
+        .eq("reciter_id", reciterId)
+        .eq("recording_date->year", year)
+        .eq("is_published", true)
+        .order("surah_number", { ascending: true })
+        .order("ayah_start", { ascending: true });
+
+    return data || [];
+}
+
+export async function getRecordingsByAlbum(reciterId: string, album: string) {
+    const { data } = await supabase
+        .from("recordings")
+        .select(`
+            *,
+            section:sections(name_ar, slug),
+            media_files(*),
+            recording_coverage(*)
+        `)
+        .eq("reciter_id", reciterId)
+        .eq("album", album)
+        .eq("is_published", true)
+        .order("surah_number", { ascending: true })
+        .order("ayah_start", { ascending: true });
+
+    return data || [];
+}
