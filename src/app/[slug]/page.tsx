@@ -7,9 +7,8 @@ import remarkGfm from "remark-gfm";
 // Force dynamic because content changes via admin
 export const dynamic = "force-dynamic";
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const page = await getStaticPageBySlug(slug);
+export async function generateMetadata({ params }: { params: { slug: string } }) {
+    const page = await getStaticPageBySlug(params.slug);
     if (!page || !page.is_published) return {};
 
     return {
@@ -17,9 +16,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     };
 }
 
-export default async function StaticPageComponent({ params }: { params: Promise<{ slug: string }> }) {
-    const { slug } = await params;
-    const page = await getStaticPageBySlug(slug);
+export default async function StaticPageComponent({ params }: { params: { slug: string } }) {
+    const page = await getStaticPageBySlug(params.slug);
 
     if (!page || !page.is_published) {
         return notFound();
