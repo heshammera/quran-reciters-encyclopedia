@@ -67,7 +67,7 @@ export async function getRecordingsBySectionCount(reciterId: string, sectionId: 
     return count || 0;
 }
 
-export async function getRecordings(reciterId: string, sectionId: string, phaseId?: string) {
+export async function getRecordings(reciterId: string, sectionId: string, phaseId?: string, album?: string) {
     let query = supabase
         .from("recordings")
         .select(`
@@ -81,6 +81,10 @@ export async function getRecordings(reciterId: string, sectionId: string, phaseI
 
     if (phaseId) {
         query = query.eq("reciter_phase_id", phaseId);
+    }
+
+    if (album) {
+        query = query.eq("album", album);
     }
 
     const { data } = await query
@@ -257,4 +261,30 @@ export async function getRecordingsByAlbum(reciterId: string, album: string) {
         .order("ayah_start", { ascending: true });
 
     return data || [];
+}
+
+export async function getReciterAlbums(reciterId: string, sectionId: string) {
+    const { data } = await supabase
+        .from("recordings")
+        .select("album")
+        .eq("reciter_id", reciterId)
+        .eq("section_id", sectionId)
+        .eq("is_published", true)
+        .not("album", "is", null);
+
+    if (!data) return [];
+
+    // Group by album
+    const albumMap = new Map<string, number>();
+    data.forEach(rec => {
+        if (rec.album) {
+            albumMap.set(rec.album, (albumMap.get(rec.album) || 0) + 1);
+        }
+    });
+
+    // Convert to array
+    return Array.from(albumMap.entries()).map(([name, count]) => ({
+        name,
+        count
+    })).sort((a, b) => b.count - a.count);
 }

@@ -3,8 +3,8 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getReciter, getSection, getRecordings, getReciterPhases } from "@/lib/supabase/queries";
-import PhaseFilter from "@/components/reciters/PhaseFilter";
+import { getReciter, getSection, getRecordings, getReciterAlbums } from "@/lib/supabase/queries";
+import AlbumFilter from "@/components/reciters/AlbumFilter";
 import PlayButton from "@/components/player/PlayButton";
 import QueueButton from "@/components/player/QueueButton";
 import AutoPlayer from "@/components/player/AutoPlayer";
@@ -21,7 +21,7 @@ interface SectionPageProps {
         sectionSlug: string;
     }>;
     searchParams: Promise<{
-        phase?: string;
+        album?: string;
     }>;
 }
 
@@ -33,7 +33,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
     useEffect(() => {
         async function fetchData() {
             const { reciterId, sectionSlug } = await params;
-            const { phase } = await searchParams;
+            const { album } = await searchParams;
 
             const [reciter, section] = await Promise.all([
                 getReciter(reciterId),
@@ -44,9 +44,9 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                 notFound();
             }
 
-            const [phases, recordings] = await Promise.all([
-                getReciterPhases(reciterId),
-                getRecordings(reciterId, section.id, phase),
+            const [albums, recordings] = await Promise.all([
+                getReciterAlbums(reciterId, section.id),
+                getRecordings(reciterId, section.id, undefined, album),
             ]);
 
             const queueTracks: Track[] = recordings
@@ -64,7 +64,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                 }))
                 .filter((t: Track) => t.src);
 
-            setData({ reciter, section, phases, recordings, queueTracks });
+            setData({ reciter, section, albums, recordings, queueTracks });
             setLoading(false);
         }
 
@@ -75,7 +75,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
         return <div className="container mx-auto px-4 py-8 text-center">جاري التحميل...</div>;
     }
 
-    const { reciter, section, phases, recordings, queueTracks } = data;
+    const { reciter, section, albums, recordings, queueTracks } = data;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -106,8 +106,8 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
             {/* AutoPlayer for Assistant Links */}
             <AutoPlayer queueTracks={queueTracks} />
 
-            {/* Phase Filter */}
-            <PhaseFilter phases={phases} />
+            {/* Album Filter */}
+            <AlbumFilter albums={albums} />
 
             <div className="bg-white dark:bg-slate-800 rounded-xl shadow border border-slate-200 dark:border-slate-700">
                 {recordings.length > 0 ? (
