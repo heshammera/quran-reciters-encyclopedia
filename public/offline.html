@@ -819,11 +819,9 @@
                 statusText.textContent = "متصل";
                 connStatus.textContent = "تم استعادة الاتصال - يرجى تحديث الصفحة";
 
-                // Optional: Auto-reload if stuck on offline page
+                // Auto-redirect to downloads page when back online
                 if (!sessionStorage.getItem('reloaded_online')) {
-                    if (confirm("تم استعادة الاتصال. هل تريد العودة للصفحة الرئيسية؟")) {
-                        window.location.href = '/';
-                    }
+                    window.location.href = '/downloads';
                     sessionStorage.setItem('reloaded_online', 'true');
                 }
 
