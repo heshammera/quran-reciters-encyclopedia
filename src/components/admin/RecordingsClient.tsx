@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRecordingsFilters } from '@/hooks/useRecordingsFilters';
 import RecordingsSearch from '@/components/admin/RecordingsSearch';
 import RecordingsSidebar from '@/components/admin/RecordingsSidebar';
-import SortControls from '@/components/admin/SortControls';
 import DeleteButton from '@/components/admin/DeleteButton';
 import { SURAHS } from '@/lib/quran/metadata';
 import { Menu, X } from 'lucide-react';
@@ -161,28 +160,24 @@ export default function RecordingsClient({
                 )}
             </div>
 
-            {/* Search and Sort Controls */}
-            <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                <RecordingsSearch
-                    value={filters.search}
-                    onChange={(value) => updateFilter('search', value)}
-                />
-                <div className="flex gap-4 items-center">
-                    <SortControls
-                        value={filters.sortBy}
-                        onChange={(value) => updateFilter('sortBy', value)}
+            {/* Search Bar - Full Width */}
+            <div className="flex flex-col lg:flex-row gap-4 items-stretch">
+                <div className="flex-1">
+                    <RecordingsSearch
+                        value={filters.search}
+                        onChange={(value) => updateFilter('search', value)}
                     />
-                    <button
-                        onClick={() => setShowSidebar(!showSidebar)}
-                        className="lg:hidden px-4 py-2.5 rounded-lg border-2 border-gray-200 
-                                 dark:border-gray-700 bg-white dark:bg-gray-800 
-                                 text-gray-900 dark:text-white font-medium
-                                 hover:border-emerald-500 transition-all flex items-center gap-2"
-                    >
-                        {showSidebar ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                        فلاتر
-                    </button>
                 </div>
+                <button
+                    onClick={() => setShowSidebar(!showSidebar)}
+                    className="lg:hidden px-4 py-3 rounded-xl border-2 border-gray-200 
+                             dark:border-gray-700 bg-white dark:bg-gray-800 
+                             text-gray-900 dark:text-white font-medium
+                             hover:border-emerald-500 transition-all flex items-center justify-center gap-2"
+                >
+                    {showSidebar ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                    فلاتر
+                </button>
             </div>
 
             {/* Main Content */}

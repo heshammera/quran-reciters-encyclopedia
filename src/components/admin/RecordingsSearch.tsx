@@ -26,7 +26,7 @@ export default function RecordingsSearch({ value, onChange }: RecordingsSearchPr
     }, [value]);
 
     return (
-        <div className="relative w-full max-w-2xl">
+        <div className="w-full">
             <div className="relative">
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
@@ -37,7 +37,7 @@ export default function RecordingsSearch({ value, onChange }: RecordingsSearchPr
                     className="w-full pl-4 pr-12 py-3 rounded-xl border-2 border-gray-200 
                              focus:border-emerald-500 focus:ring-0 outline-none
                              dark:bg-gray-800 dark:border-gray-700 dark:text-white
-                             transition-colors"
+                             transition-colors text-base"
                 />
                 {localValue && (
                     <button
