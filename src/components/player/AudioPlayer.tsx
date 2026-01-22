@@ -79,6 +79,78 @@ export default function AudioPlayer() {
 
     // Initialize Audio Context and Filters
     useEffect(() => {
+        // ... (existing context init code) ...
+    }, []);
+
+    // Check for Offline Handoff (Resume playback from offline.html)
+    useEffect(() => {
+        const resumeFromHandoff = async () => {
+            try {
+                const handoffStr = localStorage.getItem('offline_handoff');
+                if (!handoffStr) return;
+
+                const handoff = JSON.parse(handoffStr);
+                console.log("📥 Offline Handoff detected:", handoff);
+
+                // Show a toast if possible (we need to trigger it from outside or import context properly)
+                // For now, let's rely on the fact that dispatching PLAY_TRACK will show the player.
+
+                // Clear immediately
+                localStorage.removeItem('offline_handoff');
+
+                // Check if recent (10 minutes)
+                // Extended timeout to ensure handoff works even on slow connections
+                if (Date.now() - handoff.timestamp > 600000) {
+                    console.log("⏰ Handoff expired");
+                    return;
+                }
+
+                // Dispatch track
+                dispatch({ type: 'PLAY_TRACK', payload: handoff.track });
+
+                // IMPORT TOAST
+                // We'd need to import useToast hook in the component to use it.
+                // But we are in useEffect, so we can't switch hooks now.
+                // Assuming AudioPlayer doesn't have useToast yet? It has usePlayer.
+                // Let's rely on console for now, but if possible, trigger a UI event.
+                // Actually, let's keep it simple. If dispatch works, player appears.
+
+                // Wait for audio to be ready
+                const waitForAudio = setInterval(() => {
+                    if (audioRef.current && audioRef.current.readyState >= 2) {
+                        clearInterval(waitForAudio);
+                        console.log("🎵 Resuming at", handoff.currentTime);
+
+                        // Force update currentTime again just to be safe
+                        audioRef.current.currentTime = handoff.currentTime;
+
+                        if (handoff.isPlaying) {
+                            const playPromise = audioRef.current.play();
+                            if (playPromise !== undefined) {
+                                playPromise
+                                    .then(() => console.log("✅ Resumed"))
+                                    .catch(e => {
+                                        console.error("❌ Play failed (Autoplay policy?)", e);
+                                        // If play fails, at least we are at the right time and paused.
+                                        // Player UI should show "Play" button.
+                                    });
+                            }
+                        }
+                    }
+                }, 100);
+
+                // Cleanup after 5s
+                setTimeout(() => clearInterval(waitForAudio), 5000);
+            } catch (e) {
+                console.error("❌ Handoff error:", e);
+                localStorage.removeItem('offline_handoff');
+            }
+        };
+
+        resumeFromHandoff();
+    }, [dispatch]);
+
+    useEffect(() => {
         if (!audioRef.current || sourceNodeRef.current) return;
 
         try {

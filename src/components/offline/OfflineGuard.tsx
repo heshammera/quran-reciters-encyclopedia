@@ -11,9 +11,8 @@ export default function OfflineGuard() {
     useEffect(() => {
         // Simple event listeners without causing re-renders
         const handleOnline = () => {
-            showToast("تم استعادة الاتصال بالإنترنت - جاري الانتقال للتحميلات...", "success");
-            // Client-side navigation preserves state (and audio player)
-            router.push('/downloads');
+            showToast("تم استعادة الاتصال بالإنترنت ✅", "success");
+            // NO navigation - keep user exactly where they are, keep player running
         };
 
         const handleOffline = () => {
