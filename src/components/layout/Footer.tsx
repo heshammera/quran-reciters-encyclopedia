@@ -35,7 +35,7 @@ export default function Footer() {
                 {/* Center: Copyright */}
                 <div className="text-xs text-slate-500">
                     <p>
-                        © {currentYear} جميع الحقوق محفوظة "للمشاع الإبداعي"
+                        © {currentYear} جميع الحقوق محفوظة "موسوعة القراء"
                     </p>
                 </div>
 
