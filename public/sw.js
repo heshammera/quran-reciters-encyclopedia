@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
             );
         })
     );
-    self.clients.claim();
+    // self.clients.claim(); // Disable aggressive claiming to prevent potential reloads
 });
 
 self.addEventListener('fetch', (event) => {
