@@ -66,11 +66,13 @@ export default function OfflineGuard() {
         hasRedirected.current = true;
 
         // Small delay to ensure we don't conflict with page navigation
+        // Small delay to ensure we don't conflict with page navigation
         const timeoutId = setTimeout(() => {
-            // Double-check we're still offline and not already on downloads
+            // Double-check we're still offline
             if (lastOfflineState.current && !pathname?.startsWith("/downloads")) {
-                router.replace("/downloads");
-                showToast("لا يتوفر اتصال بالإنترنت - الانتقال للتلاوات المحفوظة", "error");
+                // DON'T force redirect, it kills the player if navigation chunks fail!
+                // router.replace("/downloads");
+                showToast("لا يوجد اتصال بالإنترنت - يمكنك الذهاب للتلاوات المحفوظة", "error");
             }
         }, 150);
 

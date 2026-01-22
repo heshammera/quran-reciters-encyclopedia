@@ -237,9 +237,10 @@ export default function AudioPlayer() {
                 }
 
                 // Check if we're offline and if audio is cached
+                // Check for cached audio (Offline-First Strategy)
                 let sourceToUse = normalizedTarget;
-                if (!navigator.onLine) {
-                    console.log("AudioPlayer: Offline detected, checking cache...");
+
+                try {
                     const { getOfflineAudioUrl, isAudioCached } = await import('@/lib/download-manager');
                     const isCached = await isAudioCached(currentTrack.src);
 
@@ -247,13 +248,11 @@ export default function AudioPlayer() {
                         const cachedUrl = await getOfflineAudioUrl(currentTrack.src);
                         if (cachedUrl) {
                             sourceToUse = cachedUrl;
-                            console.log("AudioPlayer: Using cached audio (blob URL)");
-                        } else {
-                            console.warn("AudioPlayer: Audio is cached but failed to get blob URL");
+                            console.log("AudioPlayer: Using cached audio (blob URL) - Offline ready");
                         }
-                    } else {
-                        console.warn("AudioPlayer: Audio not cached for offline playback");
                     }
+                } catch (err) {
+                    console.warn("AudioPlayer: Error checking cache:", err);
                 }
 
                 console.log("AudioPlayer: Changing source to:", sourceToUse);
