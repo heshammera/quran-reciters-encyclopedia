@@ -122,7 +122,6 @@ export default function RecitersClient({
                                 <tr>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الاسم</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">التسجيلات</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الحالة</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الإجراءات</th>
                                 </tr>
                             </thead>
@@ -156,23 +155,10 @@ function ReciterMobileCard({
 }) {
     return (
         <div className="bg-white dark:bg-slate-800 rounded-xl p-4 shadow border border-slate-200 dark:border-slate-700">
-            <div className="flex justify-between items-start mb-3">
-                <div className="flex-1">
-                    <h3 className="font-bold text-lg text-slate-900 dark:text-white">
-                        {reciter.name_ar}
-                    </h3>
-                </div>
-                <div>
-                    {reciter.is_published ? (
-                        <span className="inline-flex px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                            منشور
-                        </span>
-                    ) : (
-                        <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                            محجوب
-                        </span>
-                    )}
-                </div>
+            <div className="mb-3">
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+                    {reciter.name_ar}
+                </h3>
             </div>
 
             {reciter.recordings_count !== undefined && (
@@ -223,17 +209,6 @@ function ReciterTableRow({
                     `${reciter.recordings_count} تسجيل` :
                     '-'
                 }
-            </td>
-            <td className="px-6 py-4">
-                {reciter.is_published ? (
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
-                        منشور
-                    </span>
-                ) : (
-                    <span className="inline-flex px-2 py-1 text-xs rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
-                        محجوب
-                    </span>
-                )}
             </td>
             <td className="px-6 py-4">
                 <div className="flex gap-2">

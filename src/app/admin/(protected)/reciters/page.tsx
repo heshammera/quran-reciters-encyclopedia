@@ -19,7 +19,6 @@ async function RecitersData() {
         .select(`
             id,
             name_ar,
-            is_published,
             recordings:recordings(count)
         `)
         .order("name_ar");
@@ -37,7 +36,7 @@ async function RecitersData() {
         id: reciter.id,
         name_ar: reciter.name_ar,
         name_en: null,
-        is_published: reciter.is_published,
+        is_published: true, // Default to true since column doesn't exist
         recordings_count: (reciter.recordings as any)?.[0]?.count || 0
     })) || [];
 
