@@ -19,7 +19,6 @@ async function RecitersData() {
         .select(`
             id,
             name_ar,
-            name_en,
             is_published,
             recordings:recordings(count)
         `)
@@ -37,7 +36,7 @@ async function RecitersData() {
     const recitersWithCount = reciters?.map(reciter => ({
         id: reciter.id,
         name_ar: reciter.name_ar,
-        name_en: reciter.name_en,
+        name_en: null,
         is_published: reciter.is_published,
         recordings_count: (reciter.recordings as any)?.[0]?.count || 0
     })) || [];

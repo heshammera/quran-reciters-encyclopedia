@@ -35,8 +35,7 @@ export default function RecitersClient({
         const query = searchQuery.toLowerCase();
         return reciters.filter(reciter => {
             const nameAr = reciter.name_ar?.toLowerCase() || '';
-            const nameEn = reciter.name_en?.toLowerCase() || '';
-            return nameAr.includes(query) || nameEn.includes(query);
+            return nameAr.includes(query);
         });
     }, [reciters, searchQuery]);
 
@@ -73,7 +72,7 @@ export default function RecitersClient({
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="ابحث عن قارئ بالاسم العربي أو الإنجليزي..."
+                    placeholder="ابحث عن قارئ بالاسم..."
                     className="w-full pl-4 pr-14 py-4 rounded-xl border-2 border-gray-200 
                              focus:border-emerald-500 focus:ring-0 outline-none
                              dark:bg-gray-800 dark:border-gray-700 dark:text-white
@@ -121,8 +120,7 @@ export default function RecitersClient({
                         <table className="w-full">
                             <thead className="bg-slate-50 dark:bg-slate-700/50 border-b border-slate-200 dark:border-slate-700">
                                 <tr>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الاسم بالعربية</th>
-                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الاسم بالإنجليزية</th>
+                                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الاسم</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">التسجيلات</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الحالة</th>
                                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wider">الإجراءات</th>
@@ -163,11 +161,6 @@ function ReciterMobileCard({
                     <h3 className="font-bold text-lg text-slate-900 dark:text-white">
                         {reciter.name_ar}
                     </h3>
-                    {reciter.name_en && (
-                        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                            {reciter.name_en}
-                        </p>
-                    )}
                 </div>
                 <div>
                     {reciter.is_published ? (
@@ -224,9 +217,6 @@ function ReciterTableRow({
                 <div className="font-medium text-slate-900 dark:text-white text-lg">
                     {reciter.name_ar}
                 </div>
-            </td>
-            <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
-                {reciter.name_en || '-'}
             </td>
             <td className="px-6 py-4 text-slate-600 dark:text-slate-400">
                 {reciter.recordings_count !== undefined ?
