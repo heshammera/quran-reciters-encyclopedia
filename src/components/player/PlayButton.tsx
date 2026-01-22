@@ -6,7 +6,7 @@ import { Track } from "@/types/player";
 interface PlayButtonProps {
     track: Track;
     contextTracks?: Track[];
-    size?: "sm" | "md" | "lg";
+    size?: "xs" | "sm" | "md" | "lg";
     className?: string;
     label?: string;
 }
@@ -23,12 +23,14 @@ export default function PlayButton({
     const isPlaying = isCurrentTrack && state.isPlaying;
 
     const sizeClasses = {
+        xs: "w-6 h-6",
         sm: "w-8 h-8",
         md: "w-10 h-10",
         lg: "w-12 h-12"
     };
 
     const iconClasses = {
+        xs: "w-3 h-3",
         sm: "w-4 h-4",
         md: "w-5 h-5",
         lg: "w-6 h-6"

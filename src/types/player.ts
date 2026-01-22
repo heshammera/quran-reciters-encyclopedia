@@ -21,7 +21,6 @@ export interface PlayerState {
     repeatMode: 'off' | 'one' | 'all';
     shuffle: boolean;
     isMinimized: boolean;
-    activeDownloads: string[]; // URLs of tracks currently being downloaded
     analyserNode: AnalyserNode | null;
 }
 
@@ -44,8 +43,6 @@ export type Action =
     | { type: "SET_PLAYBACK_RATE"; payload: number }
     | { type: "SET_REPEAT_MODE"; payload: 'off' | 'one' | 'all' }
     | { type: "TOGGLE_SHUFFLE" }
-    | { type: "START_DOWNLOAD"; payload: string }
-    | { type: "COMPLETE_DOWNLOAD"; payload: string }
     | { type: "SET_ANALYSER"; payload: AnalyserNode | null }
     | { type: "HYDRATE_STATE"; payload: Partial<PlayerState> };
 

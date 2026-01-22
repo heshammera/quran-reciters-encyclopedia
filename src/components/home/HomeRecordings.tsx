@@ -5,6 +5,8 @@ import { useLeanMode } from "@/context/LeanModeContext";
 import { SURAHS } from "@/lib/quran/metadata";
 import { getSurahName } from "@/lib/quran-helpers";
 import QueueButton from "@/components/player/QueueButton";
+import PlayButton from "@/components/player/PlayButton";
+import DownloadButton from "@/components/offline/DownloadButton";
 
 export default function HomeRecordings({ featured, latest }: { featured: any[], latest: any[] }) {
     const { isLean } = useLeanMode();
@@ -40,7 +42,19 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                                 {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')} {recording.city && `• ${recording.city}`}
                                             </p>
                                         </div>
-                                        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
+                                        <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity pt-1 flex items-center gap-1">
+                                            <PlayButton
+                                                size="sm"
+                                                track={{
+                                                    id: recording.id,
+                                                    title: recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام'),
+                                                    reciterName: recording.reciters?.name_ar,
+                                                    src: recording.media_files?.[0]?.archive_url || "",
+                                                    surahNumber: recording.surah_number,
+                                                    reciterId: recording.reciters?.id,
+                                                }}
+                                                contextTracks={[]}
+                                            />
                                             <QueueButton
                                                 variant="icon"
                                                 track={{
@@ -51,6 +65,14 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                                     surahNumber: recording.surah_number,
                                                     reciterId: recording.reciters?.id,
                                                 }}
+                                            />
+                                            <DownloadButton
+                                                trackId={recording.id}
+                                                title={recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
+                                                reciterName={recording.reciters?.name_ar}
+                                                audioUrl={recording.media_files?.[0]?.archive_url || ""}
+                                                surahNumber={recording.surah_number}
+                                                minimal={true}
                                             />
                                         </div>
                                     </div>
@@ -92,7 +114,19 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                         {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : (recording.sections?.name_ar || 'تلاوة'))}
                                     </p>
                                 </div>
-                                <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                    <PlayButton
+                                        size="xs"
+                                        track={{
+                                            id: recording.id,
+                                            title: recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام'),
+                                            reciterName: recording.reciters?.name_ar,
+                                            src: recording.media_files?.[0]?.archive_url || "",
+                                            surahNumber: recording.surah_number,
+                                            reciterId: recording.reciters?.id,
+                                        }}
+                                        contextTracks={[]}
+                                    />
                                     <QueueButton
                                         variant="icon"
                                         size="sm"
@@ -104,6 +138,15 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                             surahNumber: recording.surah_number,
                                             reciterId: recording.reciters?.id,
                                         }}
+                                    />
+                                    <DownloadButton
+                                        trackId={recording.id}
+                                        title={recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
+                                        reciterName={recording.reciters?.name_ar}
+                                        audioUrl={recording.media_files?.[0]?.archive_url || ""}
+                                        surahNumber={recording.surah_number}
+                                        minimal={true}
+                                        className="scale-90"
                                     />
                                 </div>
                             </div>

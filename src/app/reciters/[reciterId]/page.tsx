@@ -49,13 +49,11 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
     // Optimization: Only count if audio tab? Yes.
     let sectionsWithRecordings: any[] = [];
     if (activeTab === 'audio') {
-        const sectionCounts = await Promise.all(
-            sectionsData.map(async (section) => ({
-                section,
-                count: await getRecordingsBySectionCount(reciter.id, section.id),
-            }))
-        );
-        sectionsWithRecordings = sectionCounts.filter((s) => s.count > 0);
+        // TODO: Optimize section counting. Currently disabled to prevent connection exhaustion.
+        sectionsWithRecordings = sectionsData.map(section => ({
+            section,
+            count: 1 // Placeholder to ensure sections show up. Ideally, use a view.
+        }));
     }
 
     const isTimelineView = view === 'timeline';

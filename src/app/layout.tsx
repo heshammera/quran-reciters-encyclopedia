@@ -7,6 +7,7 @@ import { PlayerProvider } from "@/context/PlayerContext";
 import AudioPlayer from "@/components/player/AudioPlayer";
 import { LeanModeProvider } from "@/context/LeanModeContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { DownloadProvider } from "@/context/DownloadContext";
 import LeanToggle from "@/components/layout/LeanToggle";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import Footer from "@/components/layout/Footer";
@@ -14,6 +15,8 @@ import Navbar from "@/components/layout/Navbar";
 import WelcomePopup from "@/components/layout/WelcomePopup";
 import DonationBanner from "@/components/donation/DonationBanner";
 import OfflineIndicator from "@/components/offline/OfflineIndicator";
+import OfflineGuard from "@/components/offline/OfflineGuard";
+import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import PresenceTracker from "@/components/layout/PresenceTracker";
 
 import { usePathname } from "next/navigation";
@@ -64,19 +67,25 @@ export default function RootLayout({
         <ToastProvider>
           <LeanModeProvider>
             <PlayerProvider>
-              <div className="flex flex-col min-h-screen">
-                {!isAdmin && <Navbar />}
-                <main className="flex-grow">
-                  {children}
-                </main>
-                {!isAdmin && <AudioPlayer />}
-                {!isAdmin && <LeanToggle />}
-                <OfflineIndicator />
-                <PresenceTracker />
-                {!isAdmin && <WelcomePopup />}
-                {!isAdmin && <AssistantChat />}
-                {!isAdmin && <Footer />}
-              </div>
+              <DownloadProvider>
+                <div className="flex flex-col min-h-screen">
+                  {!isAdmin && <Navbar />}
+                  <main className="flex-grow">
+                    {children}
+                  </main>
+                  {!isAdmin && <AudioPlayer />}
+                  {!isAdmin && <LeanToggle />}
+                  {!isAdmin && <AudioPlayer />}
+                  {!isAdmin && <LeanToggle />}
+                  <OfflineIndicator />
+                  <OfflineGuard />
+                  <ServiceWorkerRegister />
+                  <PresenceTracker />
+                  {!isAdmin && <WelcomePopup />}
+                  {!isAdmin && <AssistantChat />}
+                  {!isAdmin && <Footer />}
+                </div>
+              </DownloadProvider>
             </PlayerProvider>
           </LeanModeProvider>
         </ToastProvider>

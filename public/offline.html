@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>التلاوات المحفوظة - موسوعة القراء</title>
+    <style>
+        :root {
+            /* Light Mode Variables */
+            --bg-page: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-hover: #f1f5f9;
+            --bg-player: rgba(255, 255, 255, 0.95);
+            --border-color: #e2e8f0;
+
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-tertiary: #94a3b8;
+
+            --accent-primary: #10b981;
+            --accent-hover: #059669;
+            --accent-light: #ecfdf5;
+            --accent-text: #059669;
+
+            --status-bg: #fef3c7;
+            --status-text: #b45309;
+            --status-dot: #d97706;
+
+            --range-bg: #e2e8f0;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-player: 0 -4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Dark Mode Variables */
+        .dark {
+            --bg-page: #0f172a;
+            --bg-card: #1e293b;
+            --bg-hover: #334155;
+            --bg-player: rgba(15, 23, 42, 0.95);
+            --border-color: #334155;
+
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --text-tertiary: #94a3b8;
+
+            --accent-primary: #10b981;
+            --accent-hover: #34d399;
+            --accent-light: rgba(16, 185, 129, 0.1);
+            --accent-text: #34d399;
+
+            --status-bg: rgba(245, 158, 11, 0.1);
+            --status-text: #fbbf24;
+            --status-dot: #f59e0b;
+
+            --range-bg: #334155;
+
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+            --shadow-player: 0 -4px 6px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            outline: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            padding-bottom: 140px;
+            /* Space for fixed player */
+            line-height: 1.5;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+
+        /* Typography & Layout */
+        .flex {
+            display: flex;
+        }
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-3 {
+            gap: 0.75rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .gap-6 {
+            gap: 1.5rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-8 {
+            margin-bottom: 2rem;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+        }
+
+        .text-3xl {
+            font-size: 1.875rem;
+        }
+
+        .text-2xl {
+            font-size: 1.5rem;
+        }
+
+        .truncate {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Specific Components */
+
+        .header-title {
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            background-color: var(--status-bg);
+            color: var(--status-text);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            font-size: 0.875rem;
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 50%;
+            background-color: var(--status-dot);
+        }
+
+        .info-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .track-item {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 1rem;
+            transition: border-color 0.2s, background-color 0.2s;
+            cursor: pointer;
+        }
+
+        .track-item:hover,
+        .track-item.active {
+            border-color: var(--accent-primary);
+        }
+
+        .track-item.active {
+            background-color: var(--accent-light);
+            border-width: 1px;
+            /* Ensure consistent border */
+        }
+
+        .dark .track-item.active {
+            background-color: rgba(16, 185, 129, 0.1);
+            border-color: var(--accent-primary);
+        }
+
+        .play-btn-circle {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .play-btn-circle:active {
+            transform: scale(0.95);
+        }
+
+        .play-btn-circle.primary {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+            width: 3.5rem;
+            /* Match AudioPlayer size */
+            height: 3.5rem;
+        }
+
+        .play-btn-circle.primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .play-btn-circle.secondary {
+            background-color: var(--accent-light);
+            color: var(--accent-text);
+            width: 3rem;
+            height: 3rem;
+        }
+
+        .track-item.active .play-btn-circle.secondary {
+            background-color: var(--accent-primary);
+            color: #ffffff;
+        }
+
+        /* Fixed Player Bar */
+        #player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: var(--bg-player);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border-color);
+            box-shadow: var(--shadow-player);
+            z-index: 50;
+            transform: translateY(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #player-bar.hidden {
+            transform: translateY(100%);
+            display: block !important;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background-color: var(--range-bg);
+            position: relative;
+            cursor: pointer;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--accent-primary);
+            width: 0%;
+            position: relative;
+        }
+
+        /* Input Range Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            /* Same as container */
+            background: transparent;
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: var(--accent-primary);
+            margin-top: -4px;
+            /* Center it */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transition: opacity 0.2s, transform 0.1s;
+        }
+
+        .progress-container:hover input[type=range]::-webkit-slider-thumb {
+            opacity: 1;
+        }
+
+        input[type=range]::-webkit-slider-thumb:active {
+            transform: scale(1.2);
+        }
+
+        /* Responsive Layout for Player Bar */
+        .player-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem 1rem;
+            gap: 1rem;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-tertiary);
+            padding: 8px;
+            border-radius: 0.5rem;
+            transition: color 0.2s, background-color 0.2s;
+        }
+
+        .control-btn:hover {
+            color: var(--text-primary);
+            background-color: var(--bg-hover);
+        }
+
+        .control-btn.active {
+            color: var(--accent-primary);
+            background-color: var(--accent-light);
+        }
+
+        /* Track Info Icon */
+        .track-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            background-color: var(--accent-light);
+            color: var(--accent-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            body {
+                padding-bottom: 200px;
+                /* More space for mobile stacked player */
+            }
+
+            .player-content {
+                flex-direction: column;
+                gap: 0.75rem;
+                padding-bottom: 1.5rem;
+                /* Safe area */
+            }
+
+            .track-info-section {
+                width: 100%;
+            }
+
+            .main-controls {
+                width: 100%;
+                justify-content: space-between;
+                /* Space out shuffle/repeat */
+                margin-top: 0.25rem;
+            }
+
+            .play-group {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                gap: 1.5rem;
+            }
+
+            .time-section {
+                display: none;
+            }
+        }
+    </style>
+    <script>
+        // Apply Dark Mode Immediately
+        (function () {
+            try {
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.classList.add('dark');
+                    document.documentElement.style.backgroundColor = '#0f172a'; // Prevent flash
+                } else {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.style.backgroundColor = '#f8fafc';
+                }
+            } catch (e) {
+                console.log('Error accessing localStorage for theme');
+            }
+        })();
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between mb-4">
+                <h1 class="text-3xl font-bold header-title">
+                    التلاوات المحفوظة
+                </h1>
+
+                <!-- Online/Offline Indicator -->
+                <div id="status-badge" class="status-badge">
+                    <div class="status-dot"></div>
+                    <span id="status-text">جاري التحقق...</span>
+                </div>
+            </div>
+
+            <!-- Storage Info -->
+            <div class="info-card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm" style="color: var(--text-secondary)">حالة النظام</div>
+                        <div class="text-2xl font-bold" style="color: var(--text-primary)" id="connection-status">أنت
+                            تتصفح النسخة المحفوظة</div>
+                    </div>
+                    <div>
+                        <div class="text-sm" style="color: var(--text-secondary)">التلاوات</div>
+                        <div class="text-2xl font-bold" style="color: var(--accent-primary)" id="track-count">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Downloads List -->
+        <div id="downloads-container" class="flex flex-col gap-3">
+            <!-- Content will be injected here -->
+        </div>
+    </div>
+
+    <!-- Fixed Audio Player Bar -->
+    <div id="player-bar" class="hidden">
+
+        <!-- Progress Bar -->
+        <div class="progress-container group">
+            <div id="progress-fill" class="progress-bar"></div>
+            <input type="range" id="seek-slider" min="0" max="100" value="0">
+        </div>
+
+        <div class="player-content">
+
+            <!-- Track Info -->
+            <div class="flex items-center gap-3 track-info-section" style="flex: 1; min-width: 0;">
+                <div class="track-icon">
+                    🎵
+                </div>
+                <div class="truncate" style="min-width: 0;">
+                    <h4 id="player-title" class="font-bold text-sm truncate" style="color: var(--text-primary)">عنوان
+                        التلاوة</h4>
+                    <p id="player-reciter" class="text-xs truncate" style="color: var(--text-secondary)">اسم القارئ</p>
+                </div>
+            </div>
+
+            <!-- Main Controls -->
+            <div class="flex items-center main-controls" style="flex: 1.5; justify-content: center; gap: 0.5rem;">
+
+                <!-- Extra: Repeat -->
+                <button id="repeat-btn" class="control-btn" title="تكرار">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                </button>
+
+                <!-- Shuffle -->
+                <button id="shuffle-btn" class="control-btn" title="عشوائي">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                    </svg>
+                </button>
+
+                <!-- Play Controls Group -->
+                <div class="play-group flex items-center gap-6 mx-2">
+                    <button id="prev-btn" class="control-btn" style="color: var(--text-secondary);">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                        </svg>
+                    </button>
+
+                    <button id="play-pause-btn" class="play-btn-circle primary">
+                        <svg id="play-icon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24"
+                            style="transform: translateX(2px);">
+                            <path d="M8 5v14l11-7z" />
+                        </svg>
+                        <svg id="pause-icon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24"
+                            class="hidden">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                        </svg>
+                    </button>
+
+                    <button id="next-btn" class="control-btn" style="color: var(--text-secondary);">
+                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Spacer for Mobile balance -->
+                <div class="hidden md:block w-8"></div>
+            </div>
+
+            <!-- Time & Volume -->
+            <div class="time-section"
+                style="flex: 1; display: flex; justify-content: flex-end; gap: 0.5rem; font-family: monospace; font-size: 0.75rem; color: var(--text-tertiary);">
+                <span id="current-time">0:00</span> / <span id="total-duration">0:00</span>
+            </div>
+        </div>
+    </div>
+
+    <audio id="audio-element" class="hidden"></audio>
+
+    <script>
+        const DOWNLOADS_KEY = 'offline-downloads';
+        const CACHE_NAME = 'offline-audio-v1';
+        let currentTrackIndex = -1;
+        let allTracks = [];
+        let isShuffle = false;
+        let repeatMode = 'off'; // 'off', 'one', 'all'
+
+        const audio = document.getElementById('audio-element');
+        const playerBar = document.getElementById('player-bar');
+
+        // UI Elements
+        const playPauseBtn = document.getElementById('play-pause-btn');
+        const playIcon = document.getElementById('play-icon');
+        const pauseIcon = document.getElementById('pause-icon');
+        const progressFill = document.getElementById('progress-fill');
+        const seekSlider = document.getElementById('seek-slider');
+        const currentTimeEl = document.getElementById('current-time');
+        const totalDurationEl = document.getElementById('total-duration');
+        const playerTitle = document.getElementById('player-title');
+        const playerReciter = document.getElementById('player-reciter');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const shuffleBtn = document.getElementById('shuffle-btn');
+        const repeatBtn = document.getElementById('repeat-btn');
+
+
+        // --- Helper Functions ---
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function formatDate(timestamp) {
+            return new Date(timestamp).toLocaleDateString('ar-EG', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+
+        function getDownloads() {
+            try {
+                const stored = localStorage.getItem(DOWNLOADS_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch { return []; }
+        }
+
+        async function getCachedAudioUrl(url) {
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                const response = await cache.match(url);
+                if (!response) return null;
+                const blob = await response.blob();
+                return URL.createObjectURL(blob);
+            } catch (e) {
+                console.error("Cache error", e);
+                return null;
+            }
+        }
+
+        // --- Core Player Logic ---
+
+        async function loadTrack(index) {
+            if (index < 0 || index >= allTracks.length) return;
+            currentTrackIndex = index;
+            const track = allTracks[index];
+
+            // Update UI Info
+            playerTitle.textContent = track.title;
+            playerReciter.textContent = track.reciterName;
+            playerBar.classList.remove('hidden'); // Show player
+
+            // Reset UI state
+            progressFill.style.width = '0%';
+            seekSlider.value = 0;
+            currentTimeEl.textContent = "0:00";
+            totalDurationEl.textContent = "0:00";
+
+            // Highlight visual feedback in list
+            renderList();
+
+            try {
+                // Try cache first
+                let src = await getCachedAudioUrl(track.audioUrl);
+
+                if (!src) {
+                    if (navigator.onLine) {
+                        src = track.audioUrl;
+                    } else {
+                        // Fallback: If not cached and offline, simulate error or alert
+                        console.warn('Audio not found in cache');
+                    }
+                }
+
+                // If cache didn't return a blob URL, stick to original (works if online)
+                if (!src) src = track.audioUrl;
+
+                audio.src = src;
+                audio.play().catch(e => console.error("Play failed", e));
+                updatePlayState(true);
+
+            } catch (err) {
+                console.error("Load error", err);
+            }
+        }
+
+        function togglePlay() {
+            if (audio.src) {
+                if (audio.paused) {
+                    audio.play();
+                    updatePlayState(true);
+                } else {
+                    audio.pause();
+                    updatePlayState(false);
+                }
+            } else if (allTracks.length > 0) {
+                loadTrack(0);
+            }
+        }
+
+        function updatePlayState(isPlaying) {
+            if (isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+            renderList(); // Update buttons in the list
+        }
+
+        function playNext() {
+            if (isShuffle) {
+                const randIndex = Math.floor(Math.random() * allTracks.length);
+                loadTrack(randIndex);
+            } else if (currentTrackIndex < allTracks.length - 1) {
+                loadTrack(currentTrackIndex + 1);
+            } else if (repeatMode === 'all') {
+                loadTrack(0);
+            }
+        }
+
+        function playPrev() {
+            if (audio.currentTime > 5) {
+                audio.currentTime = 0;
+            } else if (currentTrackIndex > 0) {
+                loadTrack(currentTrackIndex - 1);
+            }
+        }
+
+        // --- Shuffle & Repeat Logic ---
+        shuffleBtn.onclick = () => {
+            isShuffle = !isShuffle;
+            shuffleBtn.classList.toggle('active', isShuffle);
+        };
+
+        repeatBtn.onclick = () => {
+            if (repeatMode === 'off') {
+                repeatMode = 'all';
+                repeatBtn.classList.add('active');
+                repeatBtn.innerHTML = '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+            } else if (repeatMode === 'all') {
+                repeatMode = 'one';
+                repeatBtn.classList.add('active');
+                repeatBtn.innerHTML = '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/><text x="12" y="16" font-size="10" text-anchor="middle" fill="currentColor" font-weight="bold">1</text></svg>';
+            } else {
+                repeatMode = 'off';
+                repeatBtn.classList.remove('active');
+                repeatBtn.innerHTML = '<svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+            }
+        };
+
+
+        // --- Event Listeners ---
+
+        playPauseBtn.onclick = togglePlay;
+        nextBtn.onclick = playNext;
+        prevBtn.onclick = playPrev;
+
+        audio.ontimeupdate = () => {
+            const percent = (audio.currentTime / audio.duration) * 100;
+            progressFill.style.width = `${percent}%`;
+            seekSlider.value = audio.currentTime;
+            currentTimeEl.textContent = formatTime(audio.currentTime);
+        };
+
+        audio.onloadedmetadata = () => {
+            totalDurationEl.textContent = formatTime(audio.duration);
+            seekSlider.max = audio.duration;
+        };
+
+        audio.onended = () => {
+            if (repeatMode === 'one') {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                playNext();
+            }
+        };
+
+        seekSlider.oninput = (e) => {
+            const time = e.target.value;
+            audio.currentTime = time;
+        };
+
+        // --- Rendering ---
+
+        function renderList() {
+            allTracks = getDownloads();
+            const container = document.getElementById('downloads-container');
+            document.getElementById('track-count').textContent = allTracks.length;
+
+            if (allTracks.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 5rem 0;">
+                        <div style="width: 4rem; height: 4rem; margin: 0 auto 1rem; border-radius: 50%; background: var(--bg-hover); display: flex; align-items: center; justify-content: center; font-size: 2rem;">🎵</div>
+                        <p style="color: var(--text-secondary)">لا توجد تلاوات محفوظة</p>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = allTracks.map((track, idx) => {
+                const isCurrent = idx === currentTrackIndex;
+                const isPlaying = isCurrent && !audio.paused;
+
+                return `
+                <div class="track-item ${isCurrent ? 'active' : ''}" onclick="loadTrack(${idx})">
+                    <div class="flex items-center gap-4">
+                        <button class="play-btn-circle secondary">
+                             ${isPlaying ?
+                        '<svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>' :
+                        '<svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24" style="transform: translateX(2px);"><path d="M8 5v14l11-7z"/></svg>'
+                    }
+                        </button>
+                        <div class="flex-col" style="flex: 1; min-width: 0;">
+                            <h3 class="font-bold truncate" style="color: var(--text-primary)">${track.title}</h3>
+                            <div class="flex items-center gap-2 text-sm" style="color: var(--text-secondary); margin-top: 0.25rem;">
+                                <span>${track.reciterName}</span>
+                                <span>•</span>
+                                <span>${formatDate(track.downloadedAt)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `}).join('');
+        }
+
+        // --- Status Management ---
+
+        function updateStatus() {
+            const isOnline = navigator.onLine;
+            const badge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            const connStatus = document.getElementById('connection-status');
+
+            if (isOnline) {
+                // Manually setting styles for online status
+                badge.style.backgroundColor = 'var(--accent-light)';
+                badge.style.color = 'var(--accent-text)';
+                badge.querySelector('.status-dot').style.backgroundColor = 'var(--accent-primary)';
+
+                statusText.textContent = "متصل";
+                connStatus.textContent = "تم استعادة الاتصال - يرجى تحديث الصفحة";
+
+                // Optional: Auto-reload if stuck on offline page
+                if (!sessionStorage.getItem('reloaded_online')) {
+                    if (confirm("تم استعادة الاتصال. هل تريد العودة للصفحة الرئيسية؟")) {
+                        window.location.href = '/';
+                    }
+                    sessionStorage.setItem('reloaded_online', 'true');
+                }
+
+            } else {
+                // Reset to default (offline) styles defined in CSS
+                badge.style.backgroundColor = '';
+                badge.style.color = '';
+                badge.querySelector('.status-dot').style.backgroundColor = '';
+
+                statusText.textContent = "أوفلاين";
+                connStatus.textContent = "أنت تتصفح النسخة المحفوظة";
+                sessionStorage.removeItem('reloaded_online');
+            }
+        }
+
+        window.addEventListener('online', updateStatus);
+        window.addEventListener('offline', updateStatus);
+
+        // Init
+        renderList();
+        updateStatus();
+
+    </script>
+</body>
+
+</html>

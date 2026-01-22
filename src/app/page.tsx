@@ -13,7 +13,6 @@ type Reciter = Database["public"]["Tables"]["reciters"]["Row"] & {
 async function getReciters(): Promise<Reciter[] | null> {
   const supabase = await createClient();
 
-  // Fetch reciters with recording counts for smart filtering
   const { data: reciters, error } = await supabase
     .from("reciters")
     .select("*")
@@ -26,22 +25,12 @@ async function getReciters(): Promise<Reciter[] | null> {
 
   if (!reciters) return [];
 
-  // Get recording counts for each reciter
-  const recitersWithCounts = await Promise.all(
-    reciters.map(async (reciter) => {
-      const { count } = await supabase
-        .from("recordings")
-        .select("*", { count: "exact", head: true })
-        .eq("reciter_id", reciter.id);
-
-      return {
-        ...reciter,
-        recordings_count: count || 0,
-      };
-    })
-  );
-
-  return recitersWithCounts;
+  // TODO: Optimize counting mechanism. Currently disabled to prevent connection exhaustion (N+1 problem).
+  // Can be implemented via a Database View or RPC function in Supabase.
+  return reciters.map(r => ({
+    ...r,
+    recordings_count: 0
+  }));
 }
 
 async function getFeaturedRecordings() {

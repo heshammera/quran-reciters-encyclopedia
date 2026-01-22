@@ -11,7 +11,6 @@ import { getSurahName } from "@/lib/quran-helpers";
 import PlayerQueue from "./PlayerQueue";
 import DownloadButton from "../offline/DownloadButton";
 import WaveformVisualizer from "./WaveformVisualizer";
-import { addDownloadedTrack, removePendingDownload } from "@/lib/download-manager";
 
 export default function AudioPlayer() {
     const { state, dispatch } = usePlayer();
@@ -236,8 +235,28 @@ export default function AudioPlayer() {
                     // But we can ensure volume starts at 0 for new track
                 }
 
-                console.log("AudioPlayer: Changing source to:", normalizedTarget);
-                audio.src = normalizedTarget;
+                // Check if we're offline and if audio is cached
+                let sourceToUse = normalizedTarget;
+                if (!navigator.onLine) {
+                    console.log("AudioPlayer: Offline detected, checking cache...");
+                    const { getOfflineAudioUrl, isAudioCached } = await import('@/lib/download-manager');
+                    const isCached = await isAudioCached(currentTrack.src);
+
+                    if (isCached) {
+                        const cachedUrl = await getOfflineAudioUrl(currentTrack.src);
+                        if (cachedUrl) {
+                            sourceToUse = cachedUrl;
+                            console.log("AudioPlayer: Using cached audio (blob URL)");
+                        } else {
+                            console.warn("AudioPlayer: Audio is cached but failed to get blob URL");
+                        }
+                    } else {
+                        console.warn("AudioPlayer: Audio not cached for offline playback");
+                    }
+                }
+
+                console.log("AudioPlayer: Changing source to:", sourceToUse);
+                audio.src = sourceToUse;
                 audio.load(); // Force load new source
 
                 // Check history for resume position
@@ -387,25 +406,6 @@ export default function AudioPlayer() {
 
         return () => clearInterval(interval);
     }, [sleepTimer]);
-
-    // Global Service Worker Listener for cross-page downloads
-    useEffect(() => {
-        if (!('serviceWorker' in navigator)) return;
-
-        const handleMessage = (event: MessageEvent) => {
-            if (event.data && event.data.type === 'DOWNLOAD_COMPLETE') {
-                const { url } = event.data;
-                const track = removePendingDownload(url);
-                if (track) {
-                    addDownloadedTrack(track);
-                }
-                dispatch({ type: "COMPLETE_DOWNLOAD", payload: url });
-            }
-        };
-
-        navigator.serviceWorker.addEventListener('message', handleMessage);
-        return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
-    }, [dispatch]);
 
     // Add to History when track starts playing
     useEffect(() => {

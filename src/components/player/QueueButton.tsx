@@ -72,7 +72,7 @@ export default function QueueButton({
         <button
             onClick={handleAdd}
             disabled={isInQueue}
-            className={`flex items-center justify-center gap-2 ${buttonClasses} ${sizeClasses} relative group ${className}`}
+            className={`flex items-center justify-center gap-2 ${buttonClasses} ${sizeClasses} relative group/queue ${className}`}
             title={isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة!" : (label || "إضافة لقائمة التشغيل"))}
         >
             {isInQueue ? (
@@ -92,7 +92,7 @@ export default function QueueButton({
 
             {/* Tooltip for icon variant */}
             {variant === "icon" && (
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-slate-900 text-white text-[10px] rounded opacity-0 group-hover/queue:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
                     {isInQueue ? "مُضافة مسبقاً" : (added ? "تمت الإضافة" : (label || "إضافة لقائمة التشغيل"))}
                 </span>
             )}

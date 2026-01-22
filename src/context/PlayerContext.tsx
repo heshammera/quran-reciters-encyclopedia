@@ -14,7 +14,6 @@ const initialState: PlayerState = {
     repeatMode: 'off',
     shuffle: false,
     isMinimized: false,
-    activeDownloads: [],
     analyserNode: null,
 };
 
@@ -171,16 +170,6 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 queue: !state.shuffle && state.queue.length > 0
                     ? [...state.queue].sort(() => Math.random() - 0.5)
                     : state.queue
-            };
-        case "START_DOWNLOAD":
-            return {
-                ...state,
-                activeDownloads: [...state.activeDownloads, action.payload]
-            };
-        case "COMPLETE_DOWNLOAD":
-            return {
-                ...state,
-                activeDownloads: state.activeDownloads.filter(url => url !== action.payload)
             };
         case "SET_ANALYSER":
             return {

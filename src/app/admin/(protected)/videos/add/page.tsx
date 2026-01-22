@@ -23,7 +23,7 @@ export default async function AddVideoPage() {
     ];
 
     return (
-        <div className="max-w-4xl mx-auto">
+        <div className="w-full">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
                     إضافة فيديو جديد

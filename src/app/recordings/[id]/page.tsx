@@ -6,6 +6,7 @@ import { formatTime } from "@/lib/utils";
 import { formatDualYear } from "@/lib/date-utils";
 import PlayButton from "@/components/player/PlayButton";
 import QueueButton from "@/components/player/QueueButton";
+import DownloadButton from "@/components/offline/DownloadButton";
 import { Metadata } from "next";
 import { getSurahName } from "@/lib/quran-helpers";
 
@@ -203,6 +204,13 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                             </span>
                                         )}
 
+                                        {/* Venue - new badge */}
+                                        {recording.venue && (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
+                                                🕌 {recording.venue}
+                                            </span>
+                                        )}
+
                                         {/* Rarity */}
                                         {recording.rarity_classification !== 'common' && (
                                             <span className={`px-3 py-1 rounded-full text-sm text-white ${recording.rarity_classification === 'very_rare' ? 'bg-purple-600' :
@@ -237,6 +245,13 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                             <>
                                                 <PlayButton track={track} contextTracks={contextTracks} size="lg" />
                                                 <QueueButton track={track} label="إضافة لقائمة التشغيل" variant="ghost" />
+                                                <DownloadButton
+                                                    trackId={track.id}
+                                                    title={track.title}
+                                                    reciterName={track.reciterName}
+                                                    audioUrl={track.src}
+                                                    surahNumber={recording.surah_number}
+                                                />
                                             </>
                                         )}
                                     </div>
@@ -284,6 +299,35 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                     }
                                     return <div className="flex items-center justify-center h-full text-white">رابط الفيديو غير مدعوم للمعالجة المباشرة</div>;
                                 })()}
+                            </div>
+                        )}
+
+                        {/* Description & Details */}
+                        {(recording.source_description || recording.recording_details) && (
+                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
+                                {recording.recording_details && (
+                                    <div className="mb-6 last:mb-0">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                            <span className="text-emerald-500">📝</span>
+                                            تفاصيل التلاوة
+                                        </h3>
+                                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
+                                            {recording.recording_details}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {recording.source_description && (
+                                    <div className="last:mb-0">
+                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                                            <span className="text-emerald-500">ℹ️</span>
+                                            عن المصدر
+                                        </h3>
+                                        <div className="text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700/50 text-sm">
+                                            {recording.source_description}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
