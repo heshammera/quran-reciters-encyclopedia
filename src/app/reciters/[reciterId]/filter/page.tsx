@@ -76,7 +76,7 @@ export default function FilterPage({ params, searchParams }: FilterPageProps) {
                     reciterId: reciter.id,
                     sectionSlug: recording.section?.slug,
                 }))
-                .filter((t: Track) => t.src);
+                .filter((t: Track) => t.src && t.src.trim() !== '');
 
             setData({ reciter, recordings, queueTracks, filterTitle, type, value });
             setLoading(false);
@@ -132,7 +132,7 @@ export default function FilterPage({ params, searchParams }: FilterPageProps) {
                                 sectionSlug: recording.section?.slug,
                             };
 
-                            if (!isVideo && !track?.src) return null;
+                            if (!isVideo && (!track?.src || track.src.trim() === '')) return null;
 
                             return (
                                 <RecordingItem

@@ -40,6 +40,12 @@ export default function PlayButton({
         e.preventDefault(); // Prevent navigating if inside a Link
         e.stopPropagation();
 
+        // Validate source before attempting playback
+        if (!track.src || track.src.trim() === '') {
+            console.warn("PlayButton: Cannot play track without valid source", track.id);
+            return;
+        }
+
         if (isCurrentTrack) {
             dispatch({ type: "TOGGLE_PLAY_PAUSE" });
         } else {

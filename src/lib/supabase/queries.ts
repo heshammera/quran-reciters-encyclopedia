@@ -17,10 +17,20 @@ export async function getReciter(id: string) {
 export async function getReciters() {
     const { data } = await supabase
         .from("reciters")
-        .select("*")
+        .select(`
+            *,
+            recordings:recordings(count)
+        `)
+        .eq('recordings.is_published', true) // Filter recordings count by published
         .order("name_ar");
 
-    return data || [];
+    if (!data) return [];
+
+    // Transform to flat structure with recordings_count
+    return data.map((reciter: any) => ({
+        ...reciter,
+        recordings_count: reciter.recordings?.[0]?.count || 0
+    }));
 }
 
 export async function getReciterPhases(reciterId: string) {
@@ -65,6 +75,27 @@ export async function getRecordingsBySectionCount(reciterId: string, sectionId: 
         .eq("is_published", true);
 
     return count || 0;
+}
+
+export async function getReciterSectionStats(reciterId: string) {
+    // Optimized query to fetch just section_ids for counting
+    const { data } = await supabase
+        .from("recordings")
+        .select("section_id")
+        .eq("reciter_id", reciterId)
+        .eq("is_published", true);
+
+    if (!data) return new Map<string, number>();
+
+    // Count by section_id in memory
+    const counts = new Map<string, number>();
+    data.forEach((row: any) => {
+        if (row.section_id) {
+            counts.set(row.section_id, (counts.get(row.section_id) || 0) + 1);
+        }
+    });
+
+    return counts;
 }
 
 export async function getRecordings(reciterId: string, sectionId: string, phaseId?: string, album?: string) {

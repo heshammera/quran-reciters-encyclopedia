@@ -15,7 +15,11 @@ async function getReciters(): Promise<Reciter[] | null> {
 
   const { data: reciters, error } = await supabase
     .from("reciters")
-    .select("*")
+    .select(`
+      *,
+      recordings:recordings(count)
+    `)
+    .eq('recordings.is_published', true)
     .order("name_ar");
 
   if (error) {
@@ -25,11 +29,9 @@ async function getReciters(): Promise<Reciter[] | null> {
 
   if (!reciters) return [];
 
-  // TODO: Optimize counting mechanism. Currently disabled to prevent connection exhaustion (N+1 problem).
-  // Can be implemented via a Database View or RPC function in Supabase.
-  return reciters.map(r => ({
+  return reciters.map((r: any) => ({
     ...r,
-    recordings_count: 0
+    recordings_count: r.recordings?.[0]?.count || 0
   }));
 }
 
@@ -41,7 +43,8 @@ async function getFeaturedRecordings() {
     .select(`
       *,
       reciters (name_ar),
-      sections (name_ar)
+      sections (name_ar),
+      media_files (archive_url)
     `)
     .eq("is_featured", true)
     .eq("is_published", true)
@@ -64,7 +67,8 @@ async function getLatestRecordings() {
     .select(`
       *,
       reciters (name_ar, image_url),
-      sections (name_ar)
+      sections (name_ar),
+      media_files (archive_url)
     `)
     .eq("is_published", true)
     .order("created_at", { ascending: false })

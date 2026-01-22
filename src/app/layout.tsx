@@ -75,8 +75,6 @@ export default function RootLayout({
                   </main>
                   {!isAdmin && <AudioPlayer />}
                   {!isAdmin && <LeanToggle />}
-                  {!isAdmin && <AudioPlayer />}
-                  {!isAdmin && <LeanToggle />}
                   <OfflineIndicator />
                   <OfflineGuard />
                   <ServiceWorkerRegister />

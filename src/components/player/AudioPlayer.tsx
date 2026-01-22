@@ -41,6 +41,7 @@ export default function AudioPlayer() {
     const lastSaveTimeRef = useRef<number>(0);
     const volumeFadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+
     // Helper: Fade Audio (Component Level)
     const fadeAudio = (targetVolume: number, duration: number = 500): Promise<void> => {
         return new Promise((resolve) => {
@@ -285,9 +286,7 @@ export default function AudioPlayer() {
                         // Fade In to target volume
                         fadeAudio(volume, 1000);
                     } else {
-                        // Already playing, just ensure volume is correct (e.g. if we cancelled a fade out)
-                        // But don't interrupt a fade in progress unless volume changed?
-                        // Simple approach: trigger fade to target volume to be safe
+                        // Already playing, just ensure volume is correct
                         fadeAudio(volume, 500);
                     }
                 } catch (err: any) {
@@ -296,9 +295,7 @@ export default function AudioPlayer() {
                     }
                 }
             } else {
-                // We want to pause. Fade out first?
-                // Problem: isPlaying is already false here. The UI has updated to "Play" icon.
-                // We should fade out then pause.
+                // We want to pause
                 if (!audio.paused) {
                     await fadeAudio(0, 400);
                     audio.pause();

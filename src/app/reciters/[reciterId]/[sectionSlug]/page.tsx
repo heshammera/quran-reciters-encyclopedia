@@ -62,7 +62,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                     reciterId: reciter.id,
                     sectionSlug: section.slug,
                 }))
-                .filter((t: Track) => t.src);
+                .filter((t: Track) => t.src && t.src.trim() !== '');
 
             setData({ reciter, section, albums, recordings, queueTracks });
             setLoading(false);
@@ -127,7 +127,7 @@ export default function SectionPage({ params, searchParams }: SectionPageProps) 
                                 sectionSlug: section.slug,
                             };
 
-                            if (!isVideo && !track?.src) return null;
+                            if (!isVideo && (!track?.src || track.src.trim() === '')) return null;
 
                             return (
                                 <RecordingItem

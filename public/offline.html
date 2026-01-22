@@ -821,6 +821,35 @@
 
                 // Auto-redirect to downloads page when back online
                 if (!sessionStorage.getItem('reloaded_online')) {
+                    // SAVE STATE FOR HANDOFF
+                    if (currentTrackIndex >= 0 && allTracks[currentTrackIndex]) {
+                        try {
+                            const track = allTracks[currentTrackIndex];
+                            const sourceUrl = track.audioUrl || track.src || track.url; // Try multiple properties for safety
+
+                            if (sourceUrl) {
+                                const handoffState = {
+                                    track: {
+                                        id: track.id,
+                                        title: track.title,
+                                        reciterName: track.reciterName,
+                                        src: sourceUrl,
+                                        surahNumber: track.surahNumber
+                                    },
+                                    currentTime: audio.currentTime,
+                                    isPlaying: !audio.paused,
+                                    timestamp: Date.now()
+                                };
+                                localStorage.setItem('offline_handoff', JSON.stringify(handoffState));
+                                console.log('Saved offline handoff state:', handoffState);
+                            } else {
+                                console.warn('Skipped handoff save: No audio source found for track', track);
+                            }
+                        } catch (e) {
+                            console.error('Failed to save handoff state', e);
+                        }
+                    }
+
                     window.location.href = '/downloads';
                     sessionStorage.setItem('reloaded_online', 'true');
                 }
