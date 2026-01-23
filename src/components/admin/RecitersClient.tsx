@@ -170,7 +170,7 @@ function ReciterMobileCard({
             <div className="flex gap-2">
                 {canEdit && (
                     <Link
-                        href={`/admin/reciters/${reciter.id}/edit`}
+                        href={`/admin/reciters/${reciter.id}`}
                         className="flex-1 px-3 py-2 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-center"
                     >
                         تعديل
@@ -214,7 +214,7 @@ function ReciterTableRow({
                 <div className="flex gap-2">
                     {canEdit && (
                         <Link
-                            href={`/admin/reciters/${reciter.id}/edit`}
+                            href={`/admin/reciters/${reciter.id}`}
                             className="px-3 py-1 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
                         >
                             تعديل

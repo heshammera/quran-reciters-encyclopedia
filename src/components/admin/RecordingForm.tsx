@@ -140,7 +140,53 @@ export default function RecordingForm({ initialData }: RecordingFormProps) {
             }
         }
         fetchData();
-    }, [initialData]);
+    }, []); // Run once on mount for static data
+
+    // Sync formData with initialData when it changes (e.g. navigation)
+    useEffect(() => {
+        if (initialData) {
+            console.log("Syncing form with initialData:", initialData);
+            setFormData({
+                archival_id: initialData.archival_id || "",
+                reciter_id: initialData.reciter_id || "",
+                title: initialData.title || "",
+                section_id: initialData.section_id || "",
+                reciter_phase_id: initialData.reciter_phase_id || "",
+                album: initialData.album || "",
+                surah_number: initialData.surah_number || 1,
+                ayah_start: initialData.ayah_start || 1,
+                ayah_end: initialData.ayah_end || 1,
+                city: initialData.city || "",
+                duration_seconds: initialData.duration_seconds || 0,
+                source_description: initialData.source_description || "",
+                quality_level: initialData.quality_level || "",
+                reliability_level: initialData.reliability_level || "verified",
+                rarity_classification: initialData.rarity_classification || "common",
+                is_published: initialData.is_published || false,
+                is_featured: initialData.is_featured || false,
+                archive_url: initialData.archive_url || "",
+
+                // الحقول الجديدة
+                venue: initialData.venue || "",
+                publisher: initialData.publisher || "",
+                recording_details: initialData.recording_details || "",
+
+                // حقول التاريخ المنفصلة
+                time_period: initialData.recording_date?.time_period || "",
+                recording_year: initialData.recording_date?.year || null,
+                recording_month: initialData.recording_date?.month || null,
+                recording_day: initialData.recording_date?.day || null,
+            });
+
+            const newContentType = (!initialData.surah_number) ? 'general' : 'quran';
+            setContentType(newContentType);
+
+            // Re-fetch phases for the new reciter
+            if (initialData.reciter_id) {
+                fetchPhases(initialData.reciter_id);
+            }
+        }
+    }, [initialData?.id]); // Only run when initialData ID changes
 
     // Fetch phases when reciter changes
     const fetchPhases = async (reciterId: string) => {
