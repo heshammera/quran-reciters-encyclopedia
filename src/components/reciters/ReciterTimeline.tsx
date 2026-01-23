@@ -80,17 +80,20 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
     }
 
     return (
-        <div className={`relative border-r border-slate-200 dark:border-slate-700 mr-4 ${isLean ? 'space-y-6' : 'space-y-12'}`}>
+        <div className={`relative ${isLean ? 'space-y-6' : 'space-y-12'} pb-12`}>
+            {/* Main Timeline Line */}
+            <div className="absolute right-8 top-4 bottom-0 w-px bg-gradient-to-b from-emerald-500/50 via-slate-200 dark:via-slate-700 to-transparent"></div>
+
             {groupedByYear.map(([year, groupRecordings]) => (
-                <div key={year} className={`relative ${isLean ? 'pr-6' : 'pr-8'}`}>
-                    {/* Year Marker */}
-                    <div className={`absolute -right-[7px] top-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white dark:border-slate-900 ${isLean ? 'w-2.5 h-2.5 -right-[5px]' : ''}`}></div>
+                <div key={year} className="relative pr-20">
+                    {/* Year Marker (Milestone Capsule) */}
+                    <div className="absolute right-0 top-0 flex items-center justify-center">
+                        <div className="relative z-10 bg-white dark:bg-slate-900 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full text-sm shadow-sm ring-4 ring-emerald-50 dark:ring-emerald-900/20">
+                            {year === "0" ? "غير مؤرخ" : year}
+                        </div>
+                    </div>
 
-                    <h3 className={`font-bold text-slate-900 dark:text-white mb-6 -mt-2 ${isLean ? 'text-lg mb-3' : 'text-2xl'}`}>
-                        {year === "0" ? "تاريخ غير محدد" : year}
-                    </h3>
-
-                    <div className={`grid grid-cols-1 ${isLean ? 'gap-2' : 'md:grid-cols-2 gap-4'}`}>
+                    <div className={`grid grid-cols-1 ${isLean ? 'gap-3 mt-8' : 'md:grid-cols-2 gap-6 mt-2'}`}>
                         {groupRecordings.map(rec => {
                             const track: Track = {
                                 id: rec.id,
@@ -102,15 +105,27 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                             };
 
                             return (
-                                <div key={rec.id} className={`bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 hover:border-emerald-500 transition-all hover:shadow-md group overflow-hidden ${isLean ? 'rounded-lg p-0' : ''}`}>
-                                    <div className={isLean ? 'p-3' : 'p-5'}>
+                                <div key={rec.id} className="relative group">
+                                    {/* Connector Line (Horizontal) */}
+                                    <div className="absolute right-[-33px] top-6 w-8 h-px bg-emerald-500/30 hidden md:block"></div>
+                                    {/* Connector Dot */}
+                                    <div className="absolute right-[-37px] top-[22px] w-2 h-2 bg-emerald-500 rounded-full hidden md:block opacity-50"></div>
+
+                                    <div className={`bg-white dark:bg-slate-800 rounded-xl transition-all duration-300 ${isLean
+                                            ? 'p-3 border border-slate-200 dark:border-slate-700'
+                                            : 'p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 border border-transparent hover:border-emerald-500/20'
+                                        }`}>
+
                                         <div className="flex items-start justify-between gap-4">
                                             <div className="flex-1 min-w-0">
                                                 <Link href={`/recordings/${rec.id}`} className="block">
-                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-1 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-base flex items-center gap-2`}>
+                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-base flex items-center gap-2 flex-wrap`}>
                                                         {rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام')}
                                                         {rec.type === 'video' && (
-                                                            <span className="text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium">فيديو</span>
+                                                            <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
+                                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg>
+                                                                فيديو
+                                                            </span>
                                                         )}
                                                     </h4>
                                                     {!isLean && (
@@ -118,24 +133,21 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                             {rec.recording_coverage && rec.recording_coverage.length > 0 ? (
                                                                 <div className="flex flex-wrap gap-1 mb-2">
                                                                     {rec.recording_coverage.map((seg, idx) => (
-                                                                        <span key={idx} className="text-sm bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-700 dark:text-slate-300">
-                                                                            سورة {getSurahName(seg.surah_number)} ({seg.ayah_start} - {seg.ayah_end})
+                                                                        <span key={idx} className="text-xs bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
+                                                                            سورة {getSurahName(seg.surah_number)} <span className="text-slate-400">({seg.ayah_start}-{seg.ayah_end})</span>
                                                                         </span>
                                                                     ))}
-                                                                    {rec.city && <span className="text-sm text-slate-700 dark:text-slate-300"> • {rec.city}</span>}
+                                                                    {rec.city && <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">📍 {rec.city}</span>}
                                                                 </div>
                                                             ) : (
-                                                                <div className="text-sm text-slate-700 dark:text-slate-300 mb-2">
+                                                                <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
                                                                     {rec.surah_number ? (
-                                                                        <>
-                                                                            {rec.title && <span>سورة {getSurahName(rec.surah_number)} - </span>}
-                                                                            <span>(الآيات {rec.ayah_start} - {rec.ayah_end})</span>
-                                                                            {rec.city && <span> • {rec.city}</span>}
-                                                                        </>
+                                                                        <span className="flex items-center gap-2">
+                                                                            <span>الآيات {rec.ayah_start} - {rec.ayah_end}</span>
+                                                                            {rec.city && <span className="text-slate-400">• {rec.city}</span>}
+                                                                        </span>
                                                                     ) : (
-                                                                        <>
-                                                                            {rec.city && <span>{rec.city}</span>}
-                                                                        </>
+                                                                        rec.city && <span>📍 {rec.city}</span>
                                                                     )}
                                                                 </div>
                                                             )}
@@ -143,12 +155,13 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                     )}
                                                 </Link>
 
-                                                <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
-                                                    {rec.section?.name_ar}
-                                                    {isLean && rec.city && <span> • {rec.city}</span>}
+                                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-50 dark:border-slate-700/50">
+                                                    <span className="bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
+                                                        {rec.section?.name_ar}
+                                                    </span>
                                                     {(rec.play_count !== undefined && rec.play_count !== null) && (
-                                                        <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full text-xs text-slate-500 font-medium">
-                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <span className="flex items-center gap-1" title="مرات الاستماع">
+                                                            <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
                                                             </svg>
                                                             {Number(rec.play_count || 0).toLocaleString('ar-EG')}
@@ -164,7 +177,7 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                             e.preventDefault();
                                                             setSelectedVideo(rec);
                                                         }}
-                                                        className={`rounded-full bg-red-600 hover:bg-red-700 flex items-center justify-center text-white shadow-lg transition-colors flex-shrink-0 ${isLean ? 'w-8 h-8' : 'w-10 h-10'}`}
+                                                        className={`rounded-full bg-red-50 hover:bg-red-600 text-red-600 hover:text-white transition-all flex items-center justify-center shadow-sm ${isLean ? 'w-8 h-8' : 'w-10 h-10'}`}
                                                     >
                                                         <svg className={isLean ? 'w-4 h-4' : 'w-5 h-5'} fill="currentColor" viewBox="0 0 24 24">
                                                             <path d="M8 5v14l11-7z" />
@@ -172,13 +185,13 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                     </button>
                                                 ) : rec.src && (
                                                     <div className="flex items-center gap-1">
-                                                        <PlayButton track={track} size={isLean ? "sm" : "md"} />
+                                                        <PlayButton track={track} size={isLean ? "sm" : "md"} className="shadow-sm" />
                                                         <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                                                             <QueueButton
                                                                 track={track}
                                                                 variant="icon"
                                                                 size="sm"
-                                                                className="w-8 h-8"
+                                                                className="w-8 h-8 bg-slate-50 dark:bg-slate-700"
                                                             />
                                                             <DownloadButton
                                                                 trackId={rec.id}
@@ -187,7 +200,7 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                                 audioUrl={rec.src}
                                                                 surahNumber={rec.surah_number}
                                                                 minimal={true}
-                                                                className="scale-90"
+                                                                className="scale-90 bg-slate-50 dark:bg-slate-700"
                                                             />
                                                         </div>
                                                     </div>
