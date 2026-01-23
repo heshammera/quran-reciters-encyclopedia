@@ -112,8 +112,8 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                     <div className="absolute right-[-37px] top-[22px] w-2 h-2 bg-emerald-500 rounded-full hidden md:block opacity-50"></div>
 
                                     <div className={`bg-white dark:bg-slate-800 rounded-xl transition-all duration-300 ${isLean
-                                            ? 'p-3 border border-slate-200 dark:border-slate-700'
-                                            : 'p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 border border-transparent hover:border-emerald-500/20'
+                                        ? 'p-3 border border-slate-200 dark:border-slate-700'
+                                        : 'p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 border border-transparent hover:border-emerald-500/20'
                                         }`}>
 
                                         <div className="flex items-start justify-between gap-4">
@@ -128,37 +128,21 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                             </span>
                                                         )}
                                                     </h4>
-                                                    {!isLean && (
-                                                        <>
-                                                            {rec.recording_coverage && rec.recording_coverage.length > 0 ? (
-                                                                <div className="flex flex-wrap gap-1 mb-2">
-                                                                    {rec.recording_coverage.map((seg, idx) => (
-                                                                        <span key={idx} className="text-xs bg-slate-50 dark:bg-slate-700/50 px-2 py-1 rounded text-slate-600 dark:text-slate-300 border border-slate-100 dark:border-slate-700">
-                                                                            سورة {getSurahName(seg.surah_number)} <span className="text-slate-400">({seg.ayah_start}-{seg.ayah_end})</span>
-                                                                        </span>
-                                                                    ))}
-                                                                    {rec.city && <span className="text-xs text-slate-500 dark:text-slate-400 mt-1 block">📍 {rec.city}</span>}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="text-sm text-slate-600 dark:text-slate-300 mb-2">
-                                                                    {rec.surah_number ? (
-                                                                        <span className="flex items-center gap-2">
-                                                                            <span>الآيات {rec.ayah_start} - {rec.ayah_end}</span>
-                                                                            {rec.city && <span className="text-slate-400">• {rec.city}</span>}
-                                                                        </span>
-                                                                    ) : (
-                                                                        rec.city && <span>📍 {rec.city}</span>
-                                                                    )}
-                                                                </div>
-                                                            )}
-                                                        </>
-                                                    )}
                                                 </Link>
 
                                                 <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-50 dark:border-slate-700/50">
                                                     <span className="bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
                                                         {rec.section?.name_ar}
                                                     </span>
+                                                    {rec.city && (
+                                                        <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 ms-2">
+                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            </svg>
+                                                            <span>{rec.city}</span>
+                                                        </span>
+                                                    )}
                                                     {(rec.play_count !== undefined && rec.play_count !== null) && (
                                                         <span className="flex items-center gap-1" title="مرات الاستماع">
                                                             <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
