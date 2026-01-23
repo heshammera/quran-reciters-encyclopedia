@@ -80,6 +80,19 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
                 ...state,
                 queue: filteredQueue
             };
+        case "REORDER_QUEUE":
+            const { fromIndex, toIndex } = action.payload;
+            if (fromIndex < 0 || fromIndex >= state.queue.length || toIndex < 0 || toIndex >= state.queue.length) {
+                return state;
+            }
+            const newReorderedQueue = [...state.queue];
+            const [movedItem] = newReorderedQueue.splice(fromIndex, 1);
+            newReorderedQueue.splice(toIndex, 0, movedItem);
+            return {
+                ...state,
+                queue: newReorderedQueue
+            };
+
         case "NEXT_TRACK":
             if (!state.currentTrack || state.queue.length === 0) return state;
             const currentIndex = state.queue.findIndex(t => t.id === state.currentTrack?.id);
@@ -139,8 +152,7 @@ function playerReducer(state: PlayerState, action: Action): PlayerState {
             return {
                 ...state,
                 currentTrack: null,
-                isPlaying: false,
-                queue: [] // Optional: clear queue on stop? Let's say yes for now to fully "close" it.
+                isPlaying: false
             };
         case "SET_SLEEP_TIMER":
             return {
@@ -233,3 +245,11 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 }
 
 
+
+export function usePlayer() {
+    const context = useContext(PlayerContext);
+    if (!context) {
+        throw new Error('usePlayer must be used within a PlayerProvider');
+    }
+    return context;
+}

@@ -11,6 +11,7 @@ interface PlayerHook {
     addTracksToQueue: (tracks: Track[]) => void;
     clearQueue: () => void;
     removeFromQueue: (index: number) => void;
+    reorderQueue: (fromIndex: number, toIndex: number) => void;
 }
 
 export function usePlayer(): PlayerHook {
@@ -47,5 +48,9 @@ export function usePlayer(): PlayerHook {
         dispatch({ type: "REMOVE_FROM_QUEUE", payload: index });
     };
 
-    return { state, dispatch, playTrack, setQueue, addToQueue, addTracksToQueue, clearQueue, removeFromQueue };
+    const reorderQueue = (fromIndex: number, toIndex: number) => {
+        dispatch({ type: "REORDER_QUEUE", payload: { fromIndex, toIndex } });
+    };
+
+    return { state, dispatch, playTrack, setQueue, addToQueue, addTracksToQueue, clearQueue, removeFromQueue, reorderQueue };
 }

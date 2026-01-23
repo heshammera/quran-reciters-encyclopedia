@@ -11,8 +11,7 @@ const links = [
     { href: "/", label: "الرئيسية" },
     { href: "/history", label: "📜 سجل الاستماع" },
     { href: "/downloads", label: "📥 التنزيلات" },
-    { href: "/session", label: "🎧 جلسة استماع" },
-    { href: "/compare", label: "🎯 مقارنة" },
+    { href: "/queue", label: "🎵 قائمة التشغيل" },
     { href: "/donate", label: "ادعمنا" },
 ];
 

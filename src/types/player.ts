@@ -44,5 +44,6 @@ export type Action =
     | { type: "SET_REPEAT_MODE"; payload: 'off' | 'one' | 'all' }
     | { type: "TOGGLE_SHUFFLE" }
     | { type: "SET_ANALYSER"; payload: AnalyserNode | null }
+    | { type: "REORDER_QUEUE"; payload: { fromIndex: number; toIndex: number } }
     | { type: "HYDRATE_STATE"; payload: Partial<PlayerState> };
 
