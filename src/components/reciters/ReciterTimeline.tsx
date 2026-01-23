@@ -8,6 +8,9 @@ import VideoModal from "@/components/player/VideoModal";
 import { Track } from "@/types/player";
 import { useLeanMode } from "@/context/LeanModeContext";
 import { getSurahName } from "@/lib/quran-helpers";
+import QueueButton from "@/components/player/QueueButton";
+import DownloadButton from "@/components/offline/DownloadButton";
+
 
 interface TimelineRecording {
     id: string;
@@ -39,7 +42,9 @@ interface TimelineRecording {
         ayah_start: number;
         ayah_end: number;
     }[];
+    play_count?: number;
 }
+
 
 interface ReciterTimelineProps {
     recordings: TimelineRecording[];
@@ -140,10 +145,19 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
 
                                                 <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
                                                     {rec.section?.name_ar}
+                                                    {isLean && rec.city && <span> • {rec.city}</span>}
+                                                    {(rec.play_count !== undefined && rec.play_count !== null) && (
+                                                        <span className="flex items-center gap-1 bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded-full text-xs text-slate-500 font-medium">
+                                                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                            </svg>
+                                                            {Number(rec.play_count || 0).toLocaleString('ar-EG')}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div className="shrink-0 pt-1">
+                                            <div className="shrink-0 pt-1 flex items-center gap-2">
                                                 {rec.type === 'video' ? (
                                                     <button
                                                         onClick={(e) => {
@@ -157,7 +171,26 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
                                                         </svg>
                                                     </button>
                                                 ) : rec.src && (
-                                                    <PlayButton track={track} size={isLean ? "sm" : "md"} />
+                                                    <div className="flex items-center gap-1">
+                                                        <PlayButton track={track} size={isLean ? "sm" : "md"} />
+                                                        <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                                            <QueueButton
+                                                                track={track}
+                                                                variant="icon"
+                                                                size="sm"
+                                                                className="w-8 h-8"
+                                                            />
+                                                            <DownloadButton
+                                                                trackId={rec.id}
+                                                                title={track.title}
+                                                                reciterName={track.reciterName}
+                                                                audioUrl={rec.src}
+                                                                surahNumber={rec.surah_number}
+                                                                minimal={true}
+                                                                className="scale-90"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 )}
                                             </div>
                                         </div>

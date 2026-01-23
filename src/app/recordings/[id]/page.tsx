@@ -164,6 +164,16 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
                                     </div>
 
                                     <div className="flex flex-wrap justify-center md:justify-start gap-3">
+                                        {/* Play Count */}
+                                        {recording.play_count !== undefined && recording.play_count !== null && (
+                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-2">
+                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                                </svg>
+                                                {Number(recording.play_count || 0).toLocaleString('ar-EG')} استماع
+                                            </span>
+                                        )}
+
                                         {/* City - clickable */}
                                         <Link href={`/reciters/${recording.reciter.id}/filter?type=city&value=${encodeURIComponent(recording.city)}`}>
                                             <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer">

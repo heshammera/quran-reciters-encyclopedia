@@ -7,6 +7,8 @@ import { formatTime } from "@/lib/utils";
 import { useLeanMode } from "@/context/LeanModeContext";
 import { addToHistory, updateLastPosition, getLastPosition } from "@/lib/history-utils";
 import { getSurahName } from "@/lib/quran-helpers";
+import { incrementPlayCount } from "@/app/actions/recordings";
+
 
 import PlayerQueue from "./PlayerQueue";
 import DownloadButton from "../offline/DownloadButton";
@@ -39,7 +41,10 @@ export default function AudioPlayer() {
 
     const sleepTimerEndTimeRef = useRef<number | null>(null);
     const lastSaveTimeRef = useRef<number>(0);
+
     const volumeFadeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const lastIncrementedTrackIdRef = useRef<string | null>(null);
+
 
 
     // Helper: Fade Audio (Component Level)
@@ -475,7 +480,7 @@ export default function AudioPlayer() {
         return () => clearInterval(interval);
     }, [sleepTimer]);
 
-    // Add to History when track starts playing
+    // Add to History when track starts playing & Increment Play Count
     useEffect(() => {
         if (currentTrack && isPlaying) {
             addToHistory({
@@ -485,8 +490,15 @@ export default function AudioPlayer() {
                 surahNumber: currentTrack.surahNumber,
                 src: currentTrack.src
             });
+
+            // Increment Play Count (Once per track session)
+            if (lastIncrementedTrackIdRef.current !== currentTrack.id) {
+                incrementPlayCount(currentTrack.id);
+                lastIncrementedTrackIdRef.current = currentTrack.id;
+            }
         }
     }, [currentTrack?.id, isPlaying]);
+
 
     // Media Session API - Update metadata for mobile lock screen
     useEffect(() => {

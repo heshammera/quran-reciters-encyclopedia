@@ -204,6 +204,7 @@ export async function getReciterTimeline(reciterId: string) {
             city,
             recording_date,
             created_at,
+            play_count,
             section:sections(name_ar, slug),
             media_files(archive_url),
             recording_coverage(*),

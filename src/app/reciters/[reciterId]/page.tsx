@@ -151,7 +151,8 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                                         recording_coverage: t.recording_coverage,
                                         type: t.type,
                                         videoUrl: t.video_url,
-                                        videoThumbnail: t.video_thumbnail
+                                        videoThumbnail: t.video_thumbnail,
+                                        play_count: t.play_count
                                     }))}
                                 />
                             </div>

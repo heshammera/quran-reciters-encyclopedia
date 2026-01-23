@@ -109,6 +109,15 @@ export default function RecordingItem({
                             )}
 
                             <div className="flex flex-wrap items-center gap-3 mt-1.5 text-sm">
+                                {/* عدد مرات الاستماع */}
+                                {recording.play_count !== undefined && recording.play_count !== null && (
+                                    <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1" title="عدد مرات الاستماع">
+                                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                                        </svg>
+                                        {Number(recording.play_count || 0).toLocaleString('ar-EG')}
+                                    </span>
+                                )}
                                 {/* التاريخ */}
                                 {recording.recording_date && (
                                     <span className="text-slate-700 dark:text-slate-300 flex items-center gap-1">
