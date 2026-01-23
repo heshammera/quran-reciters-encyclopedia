@@ -1,6 +1,8 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
 
+import SectionDeleteButton from "@/components/admin/SectionDeleteButton";
+
 export default async function SectionsList() {
     const supabase = await createClient();
 
@@ -16,6 +18,9 @@ export default async function SectionsList() {
             </div>
         );
     }
+
+    // Prepare simplified sections list for dropdowns
+    const sectionsList = sections?.map(s => ({ id: s.id, name_ar: s.name_ar })) || [];
 
     return (
         <div className="space-y-6">
@@ -76,6 +81,11 @@ export default async function SectionsList() {
                                                 >
                                                     تعديل
                                                 </Link>
+                                                <SectionDeleteButton
+                                                    id={section.id}
+                                                    name={section.name_ar}
+                                                    allSections={sectionsList}
+                                                />
                                             </div>
                                         </td>
                                     </tr>
