@@ -8,7 +8,7 @@ interface QueueButtonProps {
     track?: Track;
     tracks?: Track[];
     variant?: "icon" | "outline" | "ghost" | "solid";
-    size?: "sm" | "md";
+    size?: "sm" | "md" | "xs";
     label?: string;
     className?: string;
 }
@@ -52,9 +52,11 @@ export default function QueueButton({
         setTimeout(() => setAdded(false), 2000);
     };
 
-    const sizeClasses = size === "sm"
-        ? `${label ? "px-3 py-1.5" : "p-1.5"} text-xs`
-        : `${label ? "px-4 py-2" : "p-2"} text-sm`;
+    const sizeClasses = {
+        xs: `${label ? "px-2 py-1" : "p-1"} text-[10px]`,
+        sm: `${label ? "px-3 py-1.5" : "p-1.5"} text-xs`,
+        md: `${label ? "px-4 py-2" : "p-2"} text-sm`
+    }[size];
 
     const variantClasses = {
         icon: "text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 dark:text-slate-400 dark:hover:text-emerald-400 dark:hover:bg-emerald-900/20 rounded-full transition-all p-2",

@@ -124,7 +124,7 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                         </div>
 
                         {isTimelineView ? (
-                            <div className="max-w-4xl mx-auto">
+                            <div className="w-full">
                                 <div className="mb-8 text-center">
                                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                                         الرحلة القرآنية عبر الزمن

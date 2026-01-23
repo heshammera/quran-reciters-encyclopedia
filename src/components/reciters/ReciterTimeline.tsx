@@ -1,16 +1,15 @@
 "use client";
 
-import { formatDualYear } from "@/lib/date-utils";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import PlayButton from "@/components/player/PlayButton";
-import VideoModal from "@/components/player/VideoModal";
+import { formatDualYear } from "@/lib/date-utils";
+import { getSurahName } from "@/lib/quran-helpers";
 import { Track } from "@/types/player";
 import { useLeanMode } from "@/context/LeanModeContext";
-import { getSurahName } from "@/lib/quran-helpers";
+import PlayButton from "@/components/player/PlayButton";
 import QueueButton from "@/components/player/QueueButton";
 import DownloadButton from "@/components/offline/DownloadButton";
-
+import VideoModal from "@/components/player/VideoModal";
 
 interface TimelineRecording {
     id: string;
@@ -45,30 +44,41 @@ interface TimelineRecording {
     play_count?: number;
 }
 
-
 interface ReciterTimelineProps {
     recordings: TimelineRecording[];
 }
+
+const COLLAPSE_THRESHOLD = 9;
 
 export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
     const { isLean } = useLeanMode();
     const [selectedVideo, setSelectedVideo] = useState<any>(null);
 
-    // Group recordings by Year
-    const groupedByYear = useMemo(() => {
-        const groups: Record<number, TimelineRecording[]> = {};
+    // Grouping Logic: Year -> Section (Cluster)
+    const timelineData = useMemo(() => {
+        const groups: Record<number, Record<string, TimelineRecording[]>> = {};
 
         recordings.forEach(rec => {
             const year = rec.recording_date?.year || 0;
+            // Use section name as cluster key, default to 'Unknown'
+            const sectionName = rec.section?.name_ar || "تلاوات متنوعة";
+
             if (!groups[year]) {
-                groups[year] = [];
+                groups[year] = {};
             }
-            groups[year].push(rec);
+            if (!groups[year][sectionName]) {
+                groups[year][sectionName] = [];
+            }
+            groups[year][sectionName].push(rec);
         });
 
-        // Sort years descending
+        // Convert to array and sort years descending
         return Object.entries(groups)
-            .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA));
+            .sort(([yearA], [yearB]) => Number(yearB) - Number(yearA))
+            .map(([year, clusters]) => ({
+                year,
+                clusters: Object.entries(clusters).map(([name, items]) => ({ name, items }))
+            }));
     }, [recordings]);
 
     if (recordings.length === 0) {
@@ -80,124 +90,51 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
     }
 
     return (
-        <div className={`relative ${isLean ? 'space-y-6' : 'space-y-12'} pb-12`}>
-            {/* Main Timeline Line */}
-            <div className="absolute right-8 top-4 bottom-0 w-px bg-gradient-to-b from-emerald-500/50 via-slate-200 dark:via-slate-700 to-transparent"></div>
+        <div className="relative w-full pb-32">
+            {/* River Line */}
+            <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-gradient-to-b from-emerald-500 via-slate-200 dark:via-slate-700 to-transparent z-0"></div>
 
-            {groupedByYear.map(([year, groupRecordings]) => (
-                <div key={year} className="relative pr-20">
-                    {/* Year Marker (Milestone Capsule) */}
-                    <div className="absolute right-0 top-0 flex items-center justify-center">
-                        <div className="relative z-10 bg-white dark:bg-slate-900 border-2 border-emerald-500 text-emerald-600 dark:text-emerald-400 font-bold px-3 py-1 rounded-full text-sm shadow-sm ring-4 ring-emerald-50 dark:ring-emerald-900/20">
-                            {year === "0" ? "غير مؤرخ" : year}
+            {timelineData.map((group) => (
+                <div key={group.year} className="relative mb-16 scroll-mt-24" id={`year-${group.year}`}>
+                    {/* Smart Sticky Year Header */}
+                    <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
+                        <div className="container mx-auto px-4 md:px-6 py-3 flex flex-col items-center justify-center gap-2">
+                            <div className="flex items-center gap-3">
+                                <span className="font-black text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-sans tracking-tight">
+                                    {group.year === "0" ? "غير مؤرخ" : group.year}
+                                </span>
+                                <div className="hidden sm:block h-5 w-px bg-slate-300 dark:bg-slate-700"></div>
+                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
+
+                                    <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full text-xs font-bold">
+                                        {group.clusters.length} {group.clusters.length === 1 ? 'قسم' : 'أقسام'}
+                                    </span>
+
+                                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full text-xs font-bold">
+                                        {group.clusters.reduce((acc, c) => acc + c.items.length, 0)} تلاوة
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Optional: Add quick jump or current section indicator here if needed */}
                         </div>
                     </div>
 
-                    <div className={`grid grid-cols-1 ${isLean ? 'gap-3 mt-8' : 'md:grid-cols-2 gap-6 mt-2'}`}>
-                        {groupRecordings.map(rec => {
-                            const track: Track = {
-                                id: rec.id,
-                                title: rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام'),
-                                reciterName: rec.reciterName || 'Unknown',
-                                src: rec.src || '',
-                                surahNumber: rec.surah_number,
-                                reciterId: rec.reciterId || 'unknown'
-                            };
-
-                            return (
-                                <div key={rec.id} className="relative group">
-                                    {/* Connector Line (Horizontal) */}
-                                    <div className="absolute right-[-33px] top-6 w-8 h-px bg-emerald-500/30 hidden md:block"></div>
-                                    {/* Connector Dot */}
-                                    <div className="absolute right-[-37px] top-[22px] w-2 h-2 bg-emerald-500 rounded-full hidden md:block opacity-50"></div>
-
-                                    <div className={`bg-white dark:bg-slate-800 rounded-xl transition-all duration-300 ${isLean
-                                        ? 'p-3 border border-slate-200 dark:border-slate-700'
-                                        : 'p-5 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] hover:shadow-[0_8px_24px_-4px_rgba(0,0,0,0.1)] hover:-translate-y-0.5 border border-transparent hover:border-emerald-500/20'
-                                        }`}>
-
-                                        <div className="flex items-start justify-between gap-4">
-                                            <div className="flex-1 min-w-0">
-                                                <Link href={`/recordings/${rec.id}`} className="block">
-                                                    <h4 className={`font-bold text-slate-900 dark:text-white mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors text-base flex items-center gap-2 flex-wrap`}>
-                                                        {rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام')}
-                                                        {rec.type === 'video' && (
-                                                            <span className="text-xs bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-2 py-0.5 rounded-full font-medium flex items-center gap-1">
-                                                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M10 16.5l6-4.5-6-4.5v9zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z" /></svg>
-                                                                فيديو
-                                                            </span>
-                                                        )}
-                                                    </h4>
-                                                </Link>
-
-                                                <div className="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 mt-3 pt-3 border-t border-slate-50 dark:border-slate-700/50">
-                                                    <span className="bg-slate-100 dark:bg-slate-700/50 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300">
-                                                        {rec.section?.name_ar}
-                                                    </span>
-                                                    {rec.city && (
-                                                        <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 ms-2">
-                                                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            </svg>
-                                                            <span>{rec.city}</span>
-                                                        </span>
-                                                    )}
-                                                    {(rec.play_count !== undefined && rec.play_count !== null) && (
-                                                        <span className="flex items-center gap-1" title="مرات الاستماع">
-                                                            <svg className="w-3 h-3 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                                            </svg>
-                                                            {Number(rec.play_count || 0).toLocaleString('ar-EG')}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-
-                                            <div className="shrink-0 pt-1 flex items-center gap-2">
-                                                {rec.type === 'video' ? (
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setSelectedVideo(rec);
-                                                        }}
-                                                        className={`rounded-full bg-red-50 hover:bg-red-600 text-red-600 hover:text-white transition-all flex items-center justify-center shadow-sm ${isLean ? 'w-8 h-8' : 'w-10 h-10'}`}
-                                                    >
-                                                        <svg className={isLean ? 'w-4 h-4' : 'w-5 h-5'} fill="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M8 5v14l11-7z" />
-                                                        </svg>
-                                                    </button>
-                                                ) : rec.src && (
-                                                    <div className="flex items-center gap-1">
-                                                        <PlayButton track={track} size={isLean ? "sm" : "md"} className="shadow-sm" />
-                                                        <div className="hidden sm:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                            <QueueButton
-                                                                track={track}
-                                                                variant="icon"
-                                                                size="sm"
-                                                                className="w-8 h-8 bg-slate-50 dark:bg-slate-700"
-                                                            />
-                                                            <DownloadButton
-                                                                trackId={rec.id}
-                                                                title={track.title}
-                                                                reciterName={track.reciterName}
-                                                                audioUrl={rec.src}
-                                                                surahNumber={rec.surah_number}
-                                                                minimal={true}
-                                                                className="scale-90 bg-slate-50 dark:bg-slate-700"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        })}
+                    {/* Content Area */}
+                    <div className="relative z-10 px-4 md:px-6 flex flex-col gap-8 pt-8">
+                        {group.clusters.map((cluster) => (
+                            <ClusterCard
+                                key={cluster.name}
+                                name={cluster.name}
+                                items={cluster.items}
+                                isLean={isLean}
+                                onVideoSelect={setSelectedVideo}
+                            />
+                        ))}
                     </div>
                 </div>
             ))}
+
             {/* Video Modal */}
             {selectedVideo && (
                 <VideoModal
@@ -212,4 +149,172 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
             )}
         </div>
     );
+}
+
+// Cluster Card Component (Handles Toggle Logic)
+function ClusterCard({ name, items, isLean, onVideoSelect }: { name: string, items: TimelineRecording[], isLean: boolean, onVideoSelect: (v: any) => void }) {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const totalItems = items.length;
+    const shouldCollapse = totalItems > COLLAPSE_THRESHOLD;
+    const visibleItems = shouldCollapse && !isExpanded ? items.slice(0, COLLAPSE_THRESHOLD) : items;
+    const hiddenCount = totalItems - COLLAPSE_THRESHOLD;
+
+    // Dynamic Grid sizing:
+    // If we have 1 item -> 1 col (full width)
+    // If we have 2 items -> 2 cols (half width)
+    // If we have 3+ items -> 3 cols (standard)
+    const gridColsClass = visibleItems.length === 1
+        ? "grid-cols-1"
+        : visibleItems.length === 2
+            ? "grid-cols-1 md:grid-cols-2"
+            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+
+    return (
+        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] dark:shadow-none relative ring-1 ring-slate-900/5 dark:ring-white/5">
+            {/* Header - Sticky for Sections */}
+            <div className="sticky top-[9.5rem] z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 mb-6 p-4 -mx-6 -mt-6 shadow-sm transition-all rounded-t-[1.3rem]">
+                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-xl md:text-2xl shrink-0 border border-slate-100 dark:border-slate-700/50">
+                    {getSectionIcon(name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <h3 className="font-extrabold text-base md:text-lg text-slate-900 dark:text-white truncate">{name}</h3>
+                </div>
+                <span className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 text-xs font-bold px-2.5 py-1 rounded-lg shrink-0">
+                    {totalItems}
+                </span>
+            </div>
+
+            {/* Grid */}
+            <div className={`grid ${gridColsClass} gap-3 transition-all duration-300`}>
+                {visibleItems.map((rec) => (
+                    <TrackCard key={rec.id} rec={rec} isLean={isLean} onVideoSelect={onVideoSelect} />
+                ))}
+            </div>
+
+            {/* Toggle System */}
+            {shouldCollapse && (
+                <>
+                    {/* Fade Mask */}
+                    {!isExpanded && (
+                        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-b from-transparent via-white/80 to-white dark:via-slate-900/80 dark:to-slate-900 pointer-events-none z-10 transition-opacity duration-300 rounded-b-3xl"></div>
+                    )}
+
+                    {/* Toggle Button */}
+                    <div className="relative z-20 text-center mt-4">
+                        <button
+                            onClick={() => setIsExpanded(!isExpanded)}
+                            className={`inline-flex items-center gap-2 px-6 py-2.5 rounded-full font-bold text-sm transition-all duration-300 shadow-lg backdrop-blur-md
+                                ${isExpanded
+                                    ? 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                                    : 'bg-slate-900/90 dark:bg-white/90 text-white dark:text-slate-900 hover:scale-105 hover:bg-emerald-600 dark:hover:bg-emerald-400'
+                                }`}
+                        >
+                            <span>{isExpanded ? 'إظهار أقل' : `عرض ${hiddenCount} المزيد`}</span>
+                            <svg
+                                className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                            </svg>
+                        </button>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
+// Individual Track Card
+function TrackCard({ rec, isLean, onVideoSelect }: { rec: TimelineRecording, isLean: boolean, onVideoSelect: (v: any) => void }) {
+    const track: Track = {
+        id: rec.id,
+        title: rec.title || (rec.surah_number ? `سورة ${getSurahName(rec.surah_number)}` : 'تسجيل عام'),
+        reciterName: rec.reciterName || 'Unknown',
+        src: rec.src || '',
+        surahNumber: rec.surah_number,
+        reciterId: rec.reciterId || 'unknown'
+    };
+
+    return (
+        <div className="group bg-slate-50 dark:bg-slate-950/50 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-500/50 hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.15)] rounded-xl p-3 flex items-center gap-3 transition-all duration-200 cursor-default">
+            {/* Play Button Area */}
+            <div className="shrink-0 bg-white dark:bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center shadow-sm text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
+                {rec.type === 'video' ? (
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            onVideoSelect(rec);
+                        }}
+                        className="w-full h-full flex items-center justify-center text-red-600"
+                    >
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                    </button>
+                ) : (
+                    <PlayButton track={track} size="sm" />
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                    <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-relaxed" title={track.title}>
+                        {track.title}
+                    </h4>
+                </div>
+
+                <div className="flex items-center gap-2 mt-1">
+                    {rec.city && (
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-200/50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            {rec.city}
+                        </span>
+                    )}
+
+                    {(rec.play_count !== undefined && rec.play_count !== null) && (
+                        <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                            </svg>
+                            {Number(rec.play_count).toLocaleString('ar-EG')}
+                        </span>
+                    )}
+                </div>
+            </div>
+
+            {/* Hover Actions (Queue/Download) */}
+            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {!isLean && (
+                    <>
+                        <QueueButton
+                            track={track}
+                            variant="icon"
+                            size="xs"
+                            className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                        />
+                        <DownloadButton
+                            trackId={rec.id}
+                            title={track.title}
+                            reciterName={track.reciterName}
+                            audioUrl={rec.src || ''}
+                            surahNumber={rec.surah_number}
+                            minimal={true}
+                            className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 !p-1.5"
+                        />
+                    </>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function getSectionIcon(name: string) {
+    if (name.includes("مجود")) return "🎤";
+    if (name.includes("مرتل")) return "📖";
+    if (name.includes("حفلات")) return "🕌";
+    if (name.includes("استوديو")) return "🎙️";
+    if (name.includes("إذاعة")) return "📻";
+    return "📜";
 }
