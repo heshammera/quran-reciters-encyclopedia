@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import Link from "next/link";
 import { formatDualYear } from "@/lib/date-utils";
 import { getSurahName } from "@/lib/quran-helpers";
@@ -95,44 +95,12 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
             <div className="absolute top-0 bottom-0 left-1/2 w-0.5 -translate-x-1/2 bg-gradient-to-b from-emerald-500 via-slate-200 dark:via-slate-700 to-transparent z-0"></div>
 
             {timelineData.map((group) => (
-                <div key={group.year} className="relative mb-16 scroll-mt-24" id={`year-${group.year}`}>
-                    {/* Smart Sticky Year Header */}
-                    <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
-                        <div className="container mx-auto px-4 md:px-6 py-3 flex flex-col items-center justify-center gap-2">
-                            <div className="flex items-center gap-3">
-                                <span className="font-black text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-sans tracking-tight">
-                                    {group.year === "0" ? "غير مؤرخ" : group.year}
-                                </span>
-                                <div className="hidden sm:block h-5 w-px bg-slate-300 dark:bg-slate-700"></div>
-                                <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 font-medium">
-
-                                    <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full text-xs font-bold">
-                                        {group.clusters.length} {group.clusters.length === 1 ? 'قسم' : 'أقسام'}
-                                    </span>
-
-                                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full text-xs font-bold">
-                                        {group.clusters.reduce((acc, c) => acc + c.items.length, 0)} تلاوة
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Optional: Add quick jump or current section indicator here if needed */}
-                        </div>
-                    </div>
-
-                    {/* Content Area */}
-                    <div className="relative z-10 px-4 md:px-6 flex flex-col gap-8 pt-8">
-                        {group.clusters.map((cluster) => (
-                            <ClusterCard
-                                key={cluster.name}
-                                name={cluster.name}
-                                items={cluster.items}
-                                isLean={isLean}
-                                onVideoSelect={setSelectedVideo}
-                            />
-                        ))}
-                    </div>
-                </div>
+                <YearGroup
+                    key={group.year}
+                    group={group}
+                    isLean={isLean}
+                    onVideoSelect={setSelectedVideo}
+                />
             ))}
 
             {/* Video Modal */}
@@ -151,18 +119,103 @@ export default function ReciterTimeline({ recordings }: ReciterTimelineProps) {
     );
 }
 
+function YearGroup({ group, isLean, onVideoSelect }: { group: any, isLean: boolean, onVideoSelect: (v: any) => void }) {
+    const [activeSection, setActiveSection] = useState<string | null>(null);
+
+    return (
+        <div className="relative mb-16 scroll-mt-24" id={`year-${group.year}`}>
+            {/* Smart Sticky Year Header */}
+            <div className="sticky top-16 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-all duration-300">
+                <div className="container mx-auto px-4 md:px-6 py-3 flex flex-col items-center justify-center gap-2">
+                    <div className="flex items-center gap-3 transition-all duration-300">
+                        <span className="font-black text-2xl md:text-3xl text-slate-800 dark:text-slate-100 font-sans tracking-tight">
+                            {group.year === "0" ? "غير مؤرخ" : group.year}
+                        </span>
+
+                        {activeSection && (
+                            <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300">
+                                <span className="h-6 w-0.5 bg-emerald-500/50 rounded-full"></span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xl md:text-2xl">{getSectionIcon(activeSection)}</span>
+                                    <span className="font-bold text-lg text-slate-700 dark:text-slate-200">{activeSection}</span>
+                                </div>
+                            </div>
+                        )}
+
+                        {!activeSection && (
+                            <>
+                                <div className="hidden sm:block h-5 w-px bg-slate-300 dark:bg-slate-700"></div>
+                                <div className="flex items-center gap-1.5 text-xs md:text-sm text-slate-600 dark:text-slate-400 font-medium">
+                                    <span className="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold">
+                                        {group.clusters.length} {group.clusters.length === 1 ? 'قسم' : 'أقسام'}
+                                    </span>
+                                    <span className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded-full font-bold">
+                                        {group.clusters.reduce((acc: any, c: any) => acc + c.items.length, 0)} تلاوة
+                                    </span>
+                                </div>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Content Area */}
+            <div className="relative z-10 px-4 md:px-6 flex flex-col gap-8 pt-8">
+                {group.clusters.map((cluster: any) => (
+                    <ClusterCard
+                        key={cluster.name}
+                        name={cluster.name}
+                        items={cluster.items}
+                        isLean={isLean}
+                        onVideoSelect={onVideoSelect}
+                        onVisible={() => setActiveSection(cluster.name)}
+                        onHidden={() => setActiveSection((prev) => prev === cluster.name ? null : prev)}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+}
+
 // Cluster Card Component (Handles Toggle Logic)
-function ClusterCard({ name, items, isLean, onVideoSelect }: { name: string, items: TimelineRecording[], isLean: boolean, onVideoSelect: (v: any) => void }) {
+function ClusterCard({ name, items, isLean, onVideoSelect, onVisible, onHidden }: {
+    name: string,
+    items: TimelineRecording[],
+    isLean: boolean,
+    onVideoSelect: (v: any) => void,
+    onVisible: () => void,
+    onHidden: () => void
+}) {
     const [isExpanded, setIsExpanded] = useState(false);
     const totalItems = items.length;
     const shouldCollapse = totalItems > COLLAPSE_THRESHOLD;
     const visibleItems = shouldCollapse && !isExpanded ? items.slice(0, COLLAPSE_THRESHOLD) : items;
     const hiddenCount = totalItems - COLLAPSE_THRESHOLD;
 
-    // Dynamic Grid sizing:
-    // If we have 1 item -> 1 col (full width)
-    // If we have 2 items -> 2 cols (half width)
-    // If we have 3+ items -> 3 cols (standard)
+    // Intersection Observer for Sticky Header Merge
+    const [ref, setRef] = useState<HTMLDivElement | null>(null);
+
+    useEffect(() => {
+        if (!ref) return;
+
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                // Adjust threshold based on when you want the merge to happen
+                // rootMargin: -140px ensures it triggers when the card slips under the header area
+                if (entry.isIntersecting) {
+                    onVisible();
+                } else if (entry.boundingClientRect.top > 0) {
+                    // Only hide if we scrolled BACK UP past it, not down past it
+                    onHidden();
+                }
+            },
+            { threshold: 0, rootMargin: "-120px 0px -50% 0px" }
+        );
+
+        observer.observe(ref);
+        return () => observer.disconnect();
+    }, [ref, onVisible, onHidden]);
+
     const gridColsClass = visibleItems.length === 1
         ? "grid-cols-1"
         : visibleItems.length === 2
@@ -170,9 +223,9 @@ function ClusterCard({ name, items, isLean, onVideoSelect }: { name: string, ite
             : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
 
     return (
-        <div className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] dark:shadow-none relative ring-1 ring-slate-900/5 dark:ring-white/5">
-            {/* Header - Sticky for Sections */}
-            <div className="sticky top-[9.5rem] z-30 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-slate-100 dark:border-slate-800 flex items-center gap-4 mb-6 p-4 -mx-6 -mt-6 shadow-sm transition-all rounded-t-[1.3rem]">
+        <div ref={setRef} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] dark:shadow-none relative ring-1 ring-slate-900/5 dark:ring-white/5 scroll-mt-32">
+            {/* Header - Not Sticky anymore, static */}
+            <div className="flex items-center gap-4 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800">
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-xl md:text-2xl shrink-0 border border-slate-100 dark:border-slate-700/50">
                     {getSectionIcon(name)}
                 </div>
