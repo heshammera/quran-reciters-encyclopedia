@@ -67,3 +67,5 @@ body[data-mode="lean"].dark .backdrop-blur-md,
 body[data-mode="lean"].dark .backdrop-blur-sm {
   background-color: rgba(0, 0, 0, 0.95) !important;
 }
+.dark-map-tiles .leaflet-tile-pane { filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%); }
+.dark-map-tiles .leaflet-marker-icon, .dark-map-tiles .leaflet-marker-shadow, .dark-map-tiles .leaflet-popup { filter: none !important; }

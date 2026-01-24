@@ -12,6 +12,7 @@ const links = [
     { href: "/history", label: "📜 سجل الاستماع" },
     { href: "/downloads", label: "📥 التنزيلات" },
     { href: "/queue", label: "🎵 قائمة التشغيل" },
+    { href: "/map", label: "🌍 الخريطة" },
     { href: "/donate", label: "ادعمنا" },
 ];
 

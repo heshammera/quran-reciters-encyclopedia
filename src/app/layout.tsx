@@ -3,11 +3,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import "./globals.css";
-import { PlayerProvider } from "@/context/PlayerContext";
+import { Providers } from "@/components/layout/Providers";
 import AudioPlayer from "@/components/player/AudioPlayer";
-import { LeanModeProvider } from "@/context/LeanModeContext";
-import { ToastProvider } from "@/context/ToastContext";
-import { DownloadProvider } from "@/context/DownloadContext";
 import LeanToggle from "@/components/layout/LeanToggle";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import Footer from "@/components/layout/Footer";
@@ -29,8 +26,6 @@ export default function RootLayout({
   const pathname = usePathname();
   const isAdmin = pathname?.startsWith('/admin');
 
-  // Service Worker is automatically registered by next-pwa
-
   return (
     <html lang="ar" dir="rtl" suppressHydrationWarning>
       <head>
@@ -46,47 +41,26 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Aref+Ruqaa:wght@400;700&family=Tajawal:wght@200;300;400;500;700;800;900&display=swap" rel="stylesheet" />
-        <script dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              try {
-                const theme = localStorage.getItem('theme');
-                const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
-                if (theme === 'dark' || (!theme && supportDarkMode)) {
-                  document.documentElement.classList.add('dark');
-                } else {
-                  document.documentElement.classList.remove('dark');
-                }
-              } catch (e) {}
-            })();
-          `,
-        }} />
       </head>
       <body className="antialiased font-sans transition-colors duration-300 bg-background text-foreground">
         {!isAdmin && <DonationBanner />}
-        <ToastProvider>
-          <LeanModeProvider>
-            <PlayerProvider>
-              <DownloadProvider>
-                <div className="flex flex-col min-h-screen">
-                  {!isAdmin && <Navbar />}
-                  <main className="flex-grow">
-                    {children}
-                  </main>
-                  {!isAdmin && <AudioPlayer />}
-                  {!isAdmin && <LeanToggle />}
-                  <OfflineIndicator />
-                  <OfflineGuard />
-                  <ServiceWorkerRegister />
-                  <PresenceTracker />
-                  {!isAdmin && <WelcomePopup />}
-                  {!isAdmin && <AssistantChat />}
-                  {!isAdmin && <Footer />}
-                </div>
-              </DownloadProvider>
-            </PlayerProvider>
-          </LeanModeProvider>
-        </ToastProvider>
+        <Providers>
+          <div className="flex flex-col min-h-screen">
+            {!isAdmin && <Navbar />}
+            <main className="flex-grow">
+              {children}
+            </main>
+            {!isAdmin && <AudioPlayer />}
+            {!isAdmin && <LeanToggle />}
+            <OfflineIndicator />
+            <OfflineGuard />
+            <ServiceWorkerRegister />
+            <PresenceTracker />
+            {!isAdmin && <WelcomePopup />}
+            {!isAdmin && <AssistantChat />}
+            {!isAdmin && <Footer />}
+          </div>
+        </Providers>
       </body>
     </html >
   );
