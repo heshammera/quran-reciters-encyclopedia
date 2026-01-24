@@ -788,7 +788,7 @@ export default function AudioPlayer() {
                                     </button>
                                 </div>
 
-                                {/* Mobile-only: More Utilities */}
+                                {/* Mobile-only: More Utilities (Download + Close) */}
                                 <div className="flex md:hidden items-center gap-2">
                                     <DownloadButton
                                         trackId={currentTrack.id}
@@ -798,6 +798,16 @@ export default function AudioPlayer() {
                                         surahNumber={currentTrack.surahNumber}
                                         minimal={true}
                                     />
+                                    {/* Mobile Close Button - Added here for accessibility */}
+                                    <button
+                                        onClick={() => dispatch({ type: "STOP_PLAYER" })}
+                                        className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                        title="إغلاق"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
                                 </div>
                             </div>
 
@@ -814,6 +824,15 @@ export default function AudioPlayer() {
 
                                 {/* Utilities Group */}
                                 <div className="flex items-center gap-1">
+                                    {/* Queue Toggle (Desktop) */}
+                                    <button
+                                        onClick={() => setShowQueue(!showQueue)}
+                                        className={`p-1.5 rounded-lg ${showQueue ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" : "text-slate-400 hover:text-slate-600"}`}
+                                        title="قائمة التشغيل"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+                                    </button>
+
                                     <button onClick={() => dispatch({ type: "TOGGLE_SHUFFLE" })} className={`p-1.5 rounded-lg ${shuffle ? "text-emerald-500 bg-emerald-50 dark:bg-emerald-900/20" : "text-slate-400 hover:text-slate-600"}`}>
                                         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
                                     </button>

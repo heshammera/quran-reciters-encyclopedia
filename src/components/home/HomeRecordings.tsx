@@ -27,7 +27,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                         >
                             <Link href={`/recordings/${recording.id}`} className="absolute inset-0 z-0" aria-label="View Recording"></Link>
 
-                            <div className="flex items-start gap-4 relative z-10">
+                            <div className="flex items-start gap-4 relative z-10 h-full pointer-events-none">
                                 {!isLean && (
                                     <div className="hidden md:flex flex-col items-center gap-2 mt-1 shrink-0">
                                         <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-xl shrink-0">
@@ -35,7 +35,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                         </div>
                                     </div>
                                 )}
-                                <div className="flex-1 min-w-0 flex flex-col gap-2">
+                                <div className="flex-1 min-w-0 flex flex-col justify-between h-full gap-2">
                                     <div className="flex items-start justify-between gap-2">
                                         <div className="space-y-1 w-full">
                                             <div className="flex items-center justify-between">
@@ -61,7 +61,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                                     </div>
 
                                     {/* Controls - Always visible on mobile, hover on desktop */}
-                                    <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                                    <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 md:hidden md:group-hover:flex pointer-events-auto">
                                         <PlayButton
                                             size="sm"
                                             track={{
@@ -118,7 +118,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                         >
                             <Link href={`/recordings/${recording.id}`} className="absolute inset-0 z-0" aria-label="View Recording"></Link>
 
-                            <div className="flex items-center gap-3 relative z-10 w-full">
+                            <div className="flex items-center gap-3 relative z-10 w-full pointer-events-none">
                                 <div className={`rounded-full flex items-center justify-center shrink-0 font-bold ${isLean
                                     ? 'w-10 h-10 bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10px]'
                                     : 'w-10 h-10 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 text-xs'
@@ -146,7 +146,7 @@ export default function HomeRecordings({ featured, latest }: { featured: any[], 
                             </div>
 
                             {/* Controls Row - Hidden on desktop until hover, Grid on Mobile */}
-                            <div className="relative z-10 flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 md:hidden md:group-hover:flex">
+                            <div className="relative z-10 flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 md:hidden md:group-hover:flex pointer-events-auto">
                                 <div className="flex items-center gap-2 w-full justify-end">
                                     <PlayButton
                                         size="xs"
