@@ -34,15 +34,65 @@ const LeafletMapComponent = ({ stats }: LeafletMapComponentProps) => {
         fixIcons();
     }, []);
 
+    const [dynamicCoords, setDynamicCoords] = useState<Record<string, [number, number]>>({});
+
+    // Load cached coordinates from localStorage on mount
+    useEffect(() => {
+        try {
+            const cached = localStorage.getItem('city_coords_cache');
+            if (cached) {
+                setDynamicCoords(JSON.parse(cached));
+            }
+        } catch (e) { }
+    }, []);
+
+    // Fetch missing coordinates
+    useEffect(() => {
+        const fetchMissingCoords = async () => {
+            for (const stat of stats) {
+                // Check if we already have it (static or dynamic)
+                if (getCityCoordinates(stat.city) || dynamicCoords[stat.city]) continue;
+
+                // Rate limiting check (simple delay)
+                await new Promise(r => setTimeout(r, 1000));
+
+                try {
+                    console.log(`🌍 Fetching coordinates for: ${stat.city}`);
+                    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(stat.city)}&limit=1`, {
+                        headers: {
+                            'User-Agent': 'QuranRecitersMap/1.0'
+                        }
+                    });
+                    const data = await res.json();
+                    if (data && data[0]) {
+                        const lat = parseFloat(data[0].lat);
+                        const lon = parseFloat(data[0].lon);
+                        const newCoords: [number, number] = [lat, lon];
+
+                        setDynamicCoords(prev => {
+                            const updated = { ...prev, [stat.city]: newCoords };
+                            localStorage.setItem('city_coords_cache', JSON.stringify(updated));
+                            return updated;
+                        });
+                    }
+                } catch (err) {
+                    console.error(`❌ Failed to geocode ${stat.city}`, err);
+                }
+            }
+        };
+
+        fetchMissingCoords();
+    }, [stats]); // Don't depend on dynamicCoords to avoid loops, only stats
+
     const markers = useMemo(() => {
         return stats
             .map(stat => {
-                const coords = getCityCoordinates(stat.city);
+                const coords = getCityCoordinates(stat.city) || dynamicCoords[stat.city];
                 if (!coords) return null;
                 return { ...stat, coords };
             })
             .filter((m): m is (CityStats & { coords: [number, number] }) => m !== null);
-    }, [stats]);
+    }, [stats, dynamicCoords]);
 
     // Always use OSM for Arabic support
     const tileUrl = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
