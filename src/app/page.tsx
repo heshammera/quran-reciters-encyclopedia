@@ -135,10 +135,10 @@ export default async function Home() {
 
         <div className="container mx-auto px-4 relative z-10 text-center space-y-8">
           <div className="space-y-4">
-            <h1 className="text-3xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight whitespace-nowrap">
+            <h1 className="text-3xl md:text-6xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight md:whitespace-nowrap">
               أرشيف <span className="text-emerald-600 dark:text-emerald-400">موسوعة</span> <span className="text-slate-900 dark:text-white">القراء</span>
             </h1>
-            <p className="text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-base md:text-xl text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed px-4">
               أكبر مشروع توثيقي للنوادر القرآنية، يجمع آلاف التسجيلات النادرة لعمالقة القراء في العالم الإسلامي.
             </p>
           </div>
@@ -148,18 +148,18 @@ export default async function Home() {
           </div>
 
           {/* Stats Bar */}
-          <div className="flex flex-wrap justify-center gap-8 md:gap-16 pt-8">
-            <div className="text-center">
-              <span className="block text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.reciters}</span>
-              <span className="text-sm text-slate-500 font-medium">قارئ</span>
+          <div className="flex flex-wrap justify-center items-center gap-6 md:gap-16 pt-8">
+            <div className="text-center min-w-[33%] md:min-w-0">
+              <span className="block text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.reciters}</span>
+              <span className="text-xs md:text-sm text-slate-500 font-medium">قارئ</span>
             </div>
-            <div className="text-center border-x border-slate-200 dark:border-slate-800 px-8 md:px-16">
-              <span className="block text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.recordings}</span>
-              <span className="text-sm text-slate-500 font-medium">تلاوة أرشيفية</span>
+            <div className="text-center border-x border-slate-200 dark:border-slate-800 px-6 md:px-16 min-w-[33%] md:min-w-0">
+              <span className="block text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.recordings}</span>
+              <span className="text-xs md:text-sm text-slate-500 font-medium">تلاوة أرشيفية</span>
             </div>
-            <div className="text-center">
-              <span className="block text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.cities}</span>
-              <span className="text-sm text-slate-500 font-medium">مدينة وبلد</span>
+            <div className="text-center min-w-[33%] md:min-w-0">
+              <span className="block text-2xl md:text-3xl font-bold text-emerald-600 dark:text-emerald-400">{stats.cities}</span>
+              <span className="text-xs md:text-sm text-slate-500 font-medium">مدينة وبلد</span>
             </div>
           </div>
         </div>
