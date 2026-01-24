@@ -4,57 +4,47 @@ import { motion } from "framer-motion";
 
 export default function SiriWaveVisualizer() {
     return (
-        <div className="relative w-full h-full flex items-center justify-center bg-black rounded-full overflow-hidden">
-            {/* Core Center - Stable */}
-            <motion.div
-                className="absolute w-2 h-2 bg-white rounded-full z-10 shadow-[0_0_10px_white]"
-                animate={{ scale: [1, 1.5, 1] }}
-                transition={{ duration: 1, repeat: Infinity }}
-            />
+        <div className="relative w-full h-full flex items-center justify-center bg-gray-900 rounded-full overflow-hidden">
 
-            {/* Cyan Wave */}
+            {/* Cyan Wave - Thick & Vivid */}
             <motion.div
-                className="absolute w-full h-full border-2 border-cyan-400 rounded-[40%] opacity-80"
+                className="absolute w-full h-full border-4 border-cyan-500 rounded-[40%]"
                 animate={{
                     rotate: 360,
-                    scale: [0.8, 1.2, 0.8],
-                    borderRadius: ["40%", "50%", "40%"]
+                    scale: [0.8, 1.1, 0.8],
                 }}
                 transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                style={{ filter: "drop-shadow(0 0 5px cyan)" }}
+                style={{ boxShadow: "0 0 10px #06b6d4" }}
             />
 
-            {/* Purple Wave */}
+            {/* Purple Wave - Thick & Vivid */}
             <motion.div
-                className="absolute w-full h-full border-2 border-purple-500 rounded-[45%] opacity-80"
+                className="absolute w-full h-full border-4 border-purple-600 rounded-[45%]"
                 animate={{
                     rotate: -360,
-                    scale: [1.1, 0.9, 1.1],
-                    borderRadius: ["45%", "35%", "45%"]
+                    scale: [1.0, 0.9, 1.0],
                 }}
                 transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                style={{ filter: "drop-shadow(0 0 5px purple)" }}
+                style={{ boxShadow: "0 0 10px #9333ea" }}
             />
 
-            {/* Emerald Wave */}
+            {/* Emerald Wave - Thick & Vivid */}
             <motion.div
-                className="absolute w-full h-full border-2 border-emerald-400 rounded-[38%] opacity-80"
+                className="absolute w-full h-full border-4 border-emerald-500 rounded-[38%]"
                 animate={{
                     rotate: 180,
-                    scale: [0.9, 1.3, 0.9],
+                    scale: [0.9, 1.2, 0.9],
                 }}
                 transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-                style={{ filter: "drop-shadow(0 0 5px emerald)" }}
+                style={{ boxShadow: "0 0 10px #10b981" }}
             />
 
-            {/* Dynamic Filled Blob (The "Soul") */}
+            {/* Central Pulse (Colored, not white) */}
             <motion.div
-                className="absolute w-1/2 h-1/2 bg-gradient-to-tr from-cyan-500 to-purple-500 rounded-full blur-md opacity-50"
-                animate={{
-                    scale: [1, 1.5, 1],
-                    rotate: [0, 180, 0]
-                }}
-                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute w-3 h-3 bg-rose-500 rounded-full z-20"
+                animate={{ scale: [1, 1.5, 1] }}
+                transition={{ duration: 0.8, repeat: Infinity }}
+                style={{ boxShadow: "0 0 10px #f43f5e" }}
             />
         </div>
     );
