@@ -6,6 +6,7 @@ import "./globals.css";
 import { Providers } from "@/components/layout/Providers";
 import AudioPlayer from "@/components/player/AudioPlayer";
 import LeanToggle from "@/components/layout/LeanToggle";
+import FloatingRadioWidget from "@/components/radio/FloatingRadioWidget";
 import AssistantChat from "@/components/assistant/AssistantChat";
 import Footer from "@/components/layout/Footer";
 import Navbar from "@/components/layout/Navbar";
@@ -57,7 +58,8 @@ export default function RootLayout({
             <ServiceWorkerRegister />
             <PresenceTracker />
             {!isAdmin && <WelcomePopup />}
-            {!isAdmin && <AssistantChat />}
+            {/* {!isAdmin && <AssistantChat />} */}
+            {!isAdmin && <FloatingRadioWidget />}
             {!isAdmin && <Footer />}
           </div>
         </Providers>

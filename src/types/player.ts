@@ -8,6 +8,7 @@ export interface Track {
     ayahEnd?: number;
     reciterId?: string;
     sectionSlug?: string;
+    isRadio?: boolean;
 }
 
 export interface PlayerState {

@@ -547,6 +547,23 @@ export default function AudioPlayer() {
 
     if (!currentTrack) return null;
 
+    // Radio Mode: Hide Main Player UI, keep Audio Element active
+    if (currentTrack.isRadio) {
+        return (
+            <audio
+                key="radio-audio"
+                ref={audioRef}
+                crossOrigin="anonymous"
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={handleEnded}
+                onLoadedMetadata={handleTimeUpdate}
+                onError={(e) => {
+                    console.error("Audio error", e);
+                }}
+            />
+        );
+    }
+
     return (
         <>
             <audio

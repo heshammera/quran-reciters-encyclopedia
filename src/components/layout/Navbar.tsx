@@ -13,6 +13,7 @@ const links = [
     { href: "/downloads", label: "📥 التنزيلات" },
     { href: "/queue", label: "🎵 قائمة التشغيل" },
     { href: "/map", label: "🌍 الخريطة" },
+    { href: "/radio", label: "📻 الراديو" },
     { href: "/donate", label: "ادعمنا" },
 ];
 
