@@ -13,6 +13,7 @@ interface DownloadButtonProps {
     className?: string;
     fullWidth?: boolean;
     minimal?: boolean;
+    iconOnly?: boolean;
 }
 
 export default function DownloadButton({
@@ -23,10 +24,14 @@ export default function DownloadButton({
     surahNumber,
     className = "",
     fullWidth = false,
-    minimal = false
+    minimal = false,
+    iconOnly = false
 }: DownloadButtonProps) {
     const { startDownload, isDownloading, getDownloadProgress } = useDownload();
     const [isSaved, setIsSaved] = useState(false);
+
+    // Treat iconOnly as minimal
+    const isMinimal = minimal || iconOnly;
 
     // Check specific download state from context
     const downloading = isDownloading(audioUrl);
@@ -66,13 +71,13 @@ export default function DownloadButton({
         return (
             <button
                 disabled
-                className={`flex items-center justify-center gap-2 ${minimal ? "p-2" : "px-4 py-2"} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg cursor-not-allowed ${fullWidth ? "w-full" : ""} ${className}`}
+                className={`flex items-center justify-center gap-2 ${isMinimal ? "p-2" : "px-4 py-2"} bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-lg cursor-not-allowed ${fullWidth ? "w-full" : ""} ${className}`}
                 title="تم التحميل"
             >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                 </svg>
-                {!minimal && <span className="text-sm font-bold">تم</span>}
+                {!isMinimal && <span className="text-sm font-bold">تم</span>}
             </button>
         );
     }
@@ -81,7 +86,7 @@ export default function DownloadButton({
         return (
             <button
                 disabled
-                className={`flex items-center justify-center gap-2 ${minimal ? "p-2" : "px-4 py-2"} rounded-lg transition-colors font-bold text-sm ${fullWidth ? "w-full" : ""} ${className} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-wait`}
+                className={`flex items-center justify-center gap-2 ${isMinimal ? "p-2" : "px-4 py-2"} rounded-lg transition-colors font-bold text-sm ${fullWidth ? "w-full" : ""} ${className} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 cursor-wait`}
                 title={`${progress.toFixed(0)}% جاري التحميل...`}
             >
                 <div className="relative w-5 h-5">
@@ -105,7 +110,7 @@ export default function DownloadButton({
                         />
                     </svg>
                 </div>
-                {!minimal && <span>{progress.toFixed(0)}%</span>}
+                {!isMinimal && <span>{progress.toFixed(0)}%</span>}
             </button>
         );
     }
@@ -113,13 +118,13 @@ export default function DownloadButton({
     return (
         <button
             onClick={handleDownload}
-            className={`flex items-center justify-center gap-2 ${minimal ? "p-2" : "px-4 py-2"} rounded-lg transition-colors font-bold text-sm ${fullWidth ? "w-full" : ""} ${className} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700`}
+            className={`flex items-center justify-center gap-2 ${isMinimal ? "p-2" : "px-4 py-2"} rounded-lg transition-colors font-bold text-sm ${fullWidth ? "w-full" : ""} ${className} bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700`}
             title="حفظ للاستماع أوفلاين"
         >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
-            {!minimal && <span>تحميل</span>}
+            {!isMinimal && <span>تحميل</span>}
         </button>
     );
 }
