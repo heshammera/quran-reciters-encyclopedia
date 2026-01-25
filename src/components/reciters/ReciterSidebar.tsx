@@ -88,7 +88,23 @@ export default function ReciterSidebar({ reciter, stats }: ReciterSidebarProps) 
             {reciter.biography_ar && (
                 <div className="bg-slate-50 dark:bg-[rgba(255,255,255,0.03)] border border-slate-200 dark:border-white/10 rounded-2xl p-5 mb-6 text-justify">
                     <div className={`text-slate-600 dark:text-slate-400 text-sm leading-relaxed ${!isBioExpanded ? 'line-clamp-4' : ''}`}>
-                        <strong className="text-slate-900 dark:text-white font-bold">{reciter.name_ar}</strong> {reciter.biography_ar}
+                        <strong className="text-slate-900 dark:text-white font-bold block mb-2">{reciter.name_ar}</strong>
+                        {reciter.biography_ar.split('\n').map((line, idx) => {
+                            if (!line.trim()) return <br key={idx} className="block content-[''] mb-2" />;
+
+                            // Check for bold syntax **text**
+                            const parts = line.split(/(\*\*.*?\*\*)/g);
+                            return (
+                                <span key={idx} className="block mb-1">
+                                    {parts.map((part, partIdx) => {
+                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                            return <strong key={partIdx} className="text-slate-900 dark:text-white font-bold">{part.slice(2, -2)}</strong>;
+                                        }
+                                        return part;
+                                    })}
+                                </span>
+                            );
+                        })}
                     </div>
                     {reciter.biography_ar.length > 150 && (
                         <button
