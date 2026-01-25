@@ -218,9 +218,7 @@ function ClusterCard({ name, items, isLean, onVideoSelect, onVisible, onHidden }
 
     const gridColsClass = visibleItems.length === 1
         ? "grid-cols-1"
-        : visibleItems.length === 2
-            ? "grid-cols-1 md:grid-cols-2"
-            : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3";
+        : "grid-cols-1 md:grid-cols-2";
 
     return (
         <div ref={setRef} className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-3xl p-6 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] dark:shadow-none relative ring-1 ring-slate-900/5 dark:ring-white/5 scroll-mt-32">
@@ -238,7 +236,7 @@ function ClusterCard({ name, items, isLean, onVideoSelect, onVisible, onHidden }
             </div>
 
             {/* Grid */}
-            <div className={`grid ${gridColsClass} gap-3 transition-all duration-300`}>
+            <div className={`grid ${gridColsClass} gap-4 transition-all duration-300`}>
                 {visibleItems.map((rec) => (
                     <TrackCard key={rec.id} rec={rec} isLean={isLean} onVideoSelect={onVideoSelect} />
                 ))}
@@ -289,101 +287,71 @@ function TrackCard({ rec, isLean, onVideoSelect }: { rec: TimelineRecording, isL
     };
 
     return (
-        <div className="group bg-slate-50 dark:bg-slate-950/50 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-500/50 hover:shadow-[0_8px_24px_-8px_rgba(16,185,129,0.15)] rounded-xl p-3 flex flex-col md:flex-row md:items-center gap-3 transition-all duration-200 cursor-default">
+        <div className="group relative bg-slate-50 dark:bg-slate-950/50 border border-transparent hover:bg-white dark:hover:bg-slate-800 hover:border-emerald-500/50 hover:shadow-lg dark:hover:shadow-[0_8px_30px_-5px_rgba(16,185,129,0.15)] rounded-2xl p-5 flex flex-col gap-4 transition-all duration-300">
 
-            {/* Mobile Title - Full Width */}
-            <div className="md:hidden w-full pb-2 border-b border-slate-100 dark:border-slate-800/50 mb-1">
-                <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-relaxed line-clamp-2" title={track.title}>
+            {/* Top: Title & Meta */}
+            <div className="flex-1">
+                <h4 className="font-bold text-slate-900 dark:text-white text-base md:text-lg leading-relaxed break-words mb-2 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
                     {track.title}
                 </h4>
+
+                {rec.city && (
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{rec.city}</span>
+                    </div>
+                )}
             </div>
 
-            {/* Content Row */}
-            <div className="flex items-center gap-3 w-full md:w-auto flex-1">
-                {/* Play Button Area */}
-                <div className="shrink-0 bg-white dark:bg-slate-800 w-10 h-10 rounded-full flex items-center justify-center shadow-sm text-emerald-600 dark:text-emerald-400 group-hover:scale-110 transition-transform">
-                    {rec.type === 'video' ? (
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                onVideoSelect(rec);
-                            }}
-                            className="w-full h-full flex items-center justify-center text-red-600"
-                        >
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                        </button>
-                    ) : (
-                        <PlayButton track={track} size="sm" />
+            {/* Divider */}
+            <div className="w-full h-px bg-slate-200 dark:bg-slate-800/80"></div>
+
+            {/* Bottom: Controls */}
+            <div className="relative z-20 flex items-center justify-between">
+
+                {/* Right: Play & Stats */}
+                <div className="flex items-center gap-3">
+                    <div className="shrink-0">
+                        {rec.type === 'video' ? (
+                            <button
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    onVideoSelect(rec);
+                                }}
+                                className="w-10 h-10 rounded-full bg-red-50 dark:bg-red-900/20 text-red-600 flex items-center justify-center hover:bg-red-600 hover:text-white transition-all shadow-sm"
+                            >
+                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+                            </button>
+                        ) : (
+                            <PlayButton
+                                track={track}
+                                size="md"
+                                className="bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm hover:shadow-md border border-slate-100 dark:border-slate-700/50"
+                            />
+                        )}
+                    </div>
+
+                    {(rec.play_count !== undefined && rec.play_count !== null) && (
+                        <div className="flex flex-col">
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500">استماع</span>
+                            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono">
+                                {Number(rec.play_count).toLocaleString('ar-EG')}
+                            </span>
+                        </div>
                     )}
                 </div>
 
-                {/* Info & Metadata */}
-                <div className="flex-1 min-w-0">
-                    {/* Desktop Title */}
-                    <div className="hidden md:flex items-center justify-between gap-2">
-                        <h4 className="font-bold text-slate-800 dark:text-slate-200 text-sm leading-relaxed" title={track.title}>
-                            {track.title}
-                        </h4>
-                    </div>
-
-                    {/* Metadata Row */}
-                    <div className="flex items-center justify-between md:justify-start gap-2 md:mt-1">
-                        <div className="flex items-center gap-2">
-                            {rec.city && (
-                                <span className="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1 bg-slate-200/50 dark:bg-slate-800 px-1.5 py-0.5 rounded">
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                    {rec.city}
-                                </span>
-                            )}
-
-                            {(rec.play_count !== undefined && rec.play_count !== null) && (
-                                <span className="text-[10px] text-slate-400 dark:text-slate-500 flex items-center gap-1">
-                                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                    </svg>
-                                    {Number(rec.play_count).toLocaleString('ar-EG')}
-                                </span>
-                            )}
-                        </div>
-
-                        {/* Mobile Actions */}
-                        <div className="md:hidden flex items-center gap-2">
-                            {!isLean && (
-                                <>
-                                    <QueueButton
-                                        track={track}
-                                        variant="icon"
-                                        size="xs"
-                                        className="text-slate-400 active:text-emerald-600"
-                                    />
-                                    <DownloadButton
-                                        trackId={rec.id}
-                                        title={track.title}
-                                        reciterName={track.reciterName}
-                                        audioUrl={rec.src || ''}
-                                        surahNumber={rec.surah_number}
-                                        minimal={true}
-                                        className="bg-transparent active:bg-slate-100 dark:active:bg-slate-800 !p-1.5"
-                                    />
-                                </>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {/* Desktop Hover Actions (Right side) */}
-            <div className="hidden md:flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                {/* Left: Actions */}
                 {!isLean && (
-                    <>
+                    <div className="flex items-center gap-1">
                         <QueueButton
                             track={track}
-                            variant="icon"
-                            size="xs"
-                            className="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400"
+                            variant="ghost"
+                            size="sm"
+                            className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-600"
                         />
                         <DownloadButton
                             trackId={rec.id}
@@ -392,11 +360,18 @@ function TrackCard({ rec, isLean, onVideoSelect }: { rec: TimelineRecording, isL
                             audioUrl={rec.src || ''}
                             surahNumber={rec.surah_number}
                             minimal={true}
-                            className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 !p-1.5"
+                            className="bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-emerald-600 !p-2"
                         />
-                    </>
+                    </div>
                 )}
             </div>
+
+            {/* Global Link Overlay */}
+            <Link
+                href={`/recordings/${track.id}`}
+                className="absolute inset-0 z-10"
+                aria-label={`انتقل إلى ${track.title}`}
+            />
         </div>
     );
 }

@@ -4,15 +4,14 @@ import {
     getReciter,
     getReciterPhases,
     getSections,
-    getRecordingsBySectionCount,
     getReciterTimeline,
-    getReciterVideos // Imported
+    getReciterVideos,
+    getReciterSectionStats
 } from "@/lib/supabase/queries";
-import ReciterProfileHeader from "@/components/reciters/ReciterProfileHeader";
-import ReciterTimeline from "../../../components/reciters/ReciterTimeline";
-import ExpandableSectionCard from "@/components/reciters/ExpandableSectionCard";
-import ReciterVideos from "@/components/reciters/ReciterVideos"; // Imported
-import { SURAHS } from "@/lib/quran/metadata";
+import ReciterSidebar from "@/components/reciters/ReciterSidebar";
+import CollectionCard from "@/components/reciters/CollectionCard";
+import ReciterVideos from "@/components/reciters/ReciterVideos";
+import ReciterTimeline from "@/components/reciters/ReciterTimeline";
 import { getSurahName } from "@/lib/quran-helpers";
 
 interface ReciterPageProps {
@@ -21,13 +20,13 @@ interface ReciterPageProps {
     }>;
     searchParams: Promise<{
         view?: string;
-        tab?: string; // Add tab param
+        tab?: string;
     }>;
 }
 
 export default async function ReciterPage({ params, searchParams }: ReciterPageProps) {
     const { reciterId } = await params;
-    const { view, tab } = await searchParams; // Destructure tab
+    const { view, tab } = await searchParams;
 
     const activeTab = tab === 'visuals' ? 'visuals' : 'audio';
 
@@ -37,185 +36,183 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
         notFound();
     }
 
-    // Fetch data based on active tab
-    const [phases, timelineData, sectionsData, videos] = await Promise.all([
+    // Fetch data
+    const [phases, sectionsData, videos, statsMap] = await Promise.all([
         getReciterPhases(reciter.id),
-        (view === 'timeline' && activeTab === 'audio') ? getReciterTimeline(reciter.id) : [],
-        getSections(), // Always needed for layout/counts
-        activeTab === 'visuals' ? getReciterVideos(reciter.id) : []
+        getSections(),
+        activeTab === 'visuals' ? getReciterVideos(reciter.id) : [],
+        getReciterSectionStats(reciter.id)
     ]);
 
-    // Recalculate section counts only if needed (audio tab) but we need sections for basic structure.
-    // Optimization: Only count if audio tab? Yes.
-    let sectionsWithRecordings: any[] = [];
-    if (activeTab === 'audio') {
-        // Optimized: Fetch all stats in one query instead of N queries
-        const { getReciterSectionStats } = await import("@/lib/supabase/queries");
-        const statsMap = await getReciterSectionStats(reciter.id);
+    // Timeline only if requested
+    const timelineData = (view === 'timeline' && activeTab === 'audio') ? await getReciterTimeline(reciter.id) : [];
 
-        sectionsWithRecordings = sectionsData.map(section => ({
-            section,
-            count: statsMap.get(section.id) || 0
-        })).filter(item => item.count > 0);
-    }
+    // Filter sections that have recordings
+    const sectionsWithRecordings = sectionsData.map(section => ({
+        section,
+        count: statsMap.get(section.id) || 0
+    })).filter(item => item.count > 0);
+
+    // Calculate total recordings for sidebar stats
+    // Summing counts from statsMap might be safer than relying on `reciter` obj updates if meaningful
+    const totalRecordings = Array.from(statsMap.values()).reduce((a, b) => a + b, 0);
 
     const isTimelineView = view === 'timeline';
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-emerald-50 via-white to-slate-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-            {/* Header */}
-            <ReciterProfileHeader reciter={reciter} />
+        // Layout Fix:
+        // Mobile: min-h-screen (allows body scrolling), flex-col.
+        // Desktop (lg): h-screen (fixed), overflow-hidden (panels scroll internally).
+        <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden bg-white dark:bg-[#020617] text-slate-900 dark:text-white font-sans transition-colors duration-300" dir="rtl">
 
-            <main className="container mx-auto px-4 py-8">
+            {/* Left Panel: Profile Spotlight (Sidebar) */}
+            <ReciterSidebar
+                reciter={reciter}
+                stats={{
+                    sectionsCount: sectionsWithRecordings.length,
+                    recordingsCount: totalRecordings,
+                    reciterCountry: 'مصر' // TODO: Add country to database
+                }}
+            />
 
-                {/* Main Tabs (Tabs UI) */}
-                <div className="flex justify-center mb-10 border-b border-slate-200 dark:border-slate-700">
-                    <div className="flex -mb-px">
-                        <Link
-                            href={`/reciters/${reciterId}?tab=audio`}
-                            className={`px-8 py-4 text-lg font-bold border-b-2 transition-colors ${activeTab === 'audio'
-                                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400'
-                                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                🎙️ التلاوات الصوتية
-                            </span>
-                        </Link>
-                        <Link
-                            href={`/reciters/${reciterId}?tab=visuals`}
-                            className={`px-8 py-4 text-lg font-bold border-b-2 transition-colors ${activeTab === 'visuals'
-                                ? 'border-emerald-600 text-emerald-600 dark:text-emerald-400 dark:border-emerald-400'
-                                : 'border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'
-                                }`}
-                        >
-                            <span className="flex items-center gap-2">
-                                🎥 المرئيات
-                            </span>
-                        </Link>
-                    </div>
-                </div>
+            {/* Right Panel: Collections Grid (Main Content) */}
+            {/* Mobile: default overflow (visible), natural scroll. 
+                Desktop: overflow-y-auto to scroll mainly this panel. */}
+            <main className="flex-1 w-full lg:w-auto lg:overflow-y-auto bg-slate-50 dark:bg-gradient-to-b dark:from-[#0f172a] dark:to-[#020617] lg:bg-gradient-to-b lg:from-white lg:to-slate-100 relative">
 
-                {/* Content based on Tab */}
-                {activeTab === 'visuals' ? (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <ReciterVideos videos={videos} />
-                    </div>
-                ) : (
-                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {/* Audio Tab Content (Existing Logic) */}
-
-                        {/* View Toggles (Timeline vs Sections) */}
-                        <div className="flex justify-center mb-12">
-                            <div className="bg-slate-100 dark:bg-slate-800 p-1 rounded-lg inline-flex">
-                                <Link
-                                    href={`/reciters/${reciterId}?tab=audio`}
-                                    className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${!isTimelineView ? 'bg-white dark:bg-slate-700 shadow text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'}`}
-                                >
-                                    الأقسام
-                                </Link>
-                                <Link
-                                    href={`/reciters/${reciterId}?tab=audio&view=timeline`}
-                                    className={`px-6 py-2 rounded-md text-sm font-bold transition-all ${isTimelineView ? 'bg-white dark:bg-slate-700 shadow text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900'}`}
-                                >
-                                    المخطط الزمني
-                                </Link>
-                            </div>
+                <div className="p-5 lg:p-10">
+                    {/* 1. Header & Tabs */}
+                    <div className="flex flex-col gap-6 mb-8">
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">📚</span>
+                            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
+                                المكتبة <span className="text-amber-500">الشاملة</span>
+                            </h2>
                         </div>
 
-                        {isTimelineView ? (
-                            <div className="w-full">
-                                <div className="mb-8 text-center">
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                        الرحلة القرآنية عبر الزمن
-                                    </h2>
-                                    <p className="text-slate-600 dark:text-slate-400">
-                                        استعرض تلاوات {reciter.name_ar} مرتبة تاريخياً
-                                    </p>
-                                </div>
-                                <ReciterTimeline
-                                    recordings={timelineData.map((t: any) => ({
-                                        id: t.id,
-                                        title: t.title || (t.surah_number ? `سورة ${getSurahName(t.surah_number)}` : 'تسجيل عام'),
-                                        surah_number: t.surah_number,
-                                        ayah_start: t.ayah_start,
-                                        ayah_end: t.ayah_end,
-                                        recording_date: t.recording_date,
-                                        created_at: t.created_at,
-                                        section: t.section,
-                                        reciterName: t.reciter?.name_ar || 'Unknown',
-                                        src: t.media_files?.[0]?.archive_url || '',
-                                        city: t.city,
-                                        duration: t.duration,
-                                        reciterId: reciter.id,
-                                        recording_coverage: t.recording_coverage,
-                                        type: t.type,
-                                        videoUrl: t.video_url,
-                                        videoThumbnail: t.video_thumbnail,
-                                        play_count: t.play_count
-                                    }))}
-                                />
-                            </div>
-                        ) : (
-                            <>
-                                {/* Phases (if any) */}
-                                {phases.length > 0 && (
-                                    <div className="mb-12">
-                                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                                            الفترات الصوتية
-                                        </h2>
-                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            {phases.map((phase) => (
-                                                <div key={phase.id} className="bg-white dark:bg-slate-800 rounded-lg p-6 border-r-4 border-emerald-500">
-                                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
-                                                        {phase.phase_name_ar}
-                                                    </h3>
-                                                    {phase.description_ar && (
-                                                        <p className="text-slate-600 dark:text-slate-400 text-sm mb-3">
-                                                            {phase.description_ar}
-                                                        </p>
-                                                    )}
-                                                    {(phase.approximate_start_year || phase.approximate_end_year) && (
-                                                        <p className="text-sm text-slate-500 dark:text-slate-500">
-                                                            {phase.approximate_start_year}
-                                                            {phase.approximate_end_year && ` - ${phase.approximate_end_year}`}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Sections */}
-                                <div>
-                                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">
-                                        الأقسام المتاحة
-                                    </h2>
-
-                                    {sectionsWithRecordings.length === 0 ? (
-                                        <div className="text-center py-16 bg-white dark:bg-slate-800 rounded-xl">
-                                            <p className="text-xl text-slate-600 dark:text-slate-400">
-                                                لم تُضاف تلاوات لهذا القارئ بعد
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                            {sectionsWithRecordings.map(({ section, count }) => (
-                                                <ExpandableSectionCard
-                                                    key={section.id}
-                                                    section={section}
-                                                    count={count}
-                                                    reciterId={reciter.id}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            </>
-                        )}
+                        {/* Segmented Control Pill Style */}
+                        <div className="bg-[#0f172a] p-1.5 rounded-full border border-white/10 flex w-full max-w-md mx-auto shadow-lg relative z-10">
+                            <Link
+                                href={`/reciters/${reciterId}?tab=audio`}
+                                className={`flex-1 text-center py-3 rounded-full font-bold text-sm transition-all duration-300 ${activeTab === 'audio'
+                                    ? 'bg-emerald-500 text-white shadow-[0_4px_12px_rgba(16,185,129,0.4)]'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                التلاوات الصوتية
+                            </Link>
+                            <Link
+                                href={`/reciters/${reciterId}?tab=visuals`}
+                                className={`flex-1 text-center py-3 rounded-full font-bold text-sm transition-all duration-300 ${activeTab === 'visuals'
+                                    ? 'bg-emerald-500 text-white shadow-[0_4px_12px_rgba(16,185,129,0.4)]'
+                                    : 'text-slate-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                المرئيات
+                            </Link>
+                        </div>
                     </div>
-                )}
+
+                    {/* Content based on Tab */}
+                    {activeTab === 'visuals' ? (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            {/* Keep existing Video component but wrapper might need styling tweaks if it relied on white bg */}
+                            <ReciterVideos videos={videos} />
+                        </div>
+                    ) : (
+                        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+
+                            {/* 2. Secondary Navigation (Departments / Timeline) */}
+                            {/* Only show if we have data or need to toggle */}
+                            <div className="flex justify-between items-center mb-6">
+                                <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 opacity-80">
+                                    {isTimelineView ? 'المخطط الزمني' : 'الأقسام المتاحة'}
+                                </h3>
+
+                                {/* Mini Toggle for Sections vs Timeline */}
+                                <div className="flex gap-1 bg-white dark:bg-[rgba(255,255,255,0.03)] p-1 rounded-lg border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
+                                    <Link
+                                        href={`/reciters/${reciterId}?tab=audio`}
+                                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${!isTimelineView
+                                            ? 'bg-slate-100 dark:bg-[#1e293b] text-emerald-600 dark:text-emerald-500 shadow-sm'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                            }`}
+                                    >
+                                        الأقسام
+                                    </Link>
+                                    <Link
+                                        href={`/reciters/${reciterId}?tab=audio&view=timeline`}
+                                        className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${isTimelineView
+                                            ? 'bg-slate-100 dark:bg-[#1e293b] text-emerald-600 dark:text-emerald-500 shadow-sm'
+                                            : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                            }`}
+                                    >
+                                        الزمني
+                                    </Link>
+                                </div>
+                            </div>
+
+                            {isTimelineView ? (
+                                <div className="max-w-4xl mx-auto">
+                                    <div className="mb-6 text-center">
+                                        <p className="text-slate-600 dark:text-slate-400 text-sm">استعرض تلاوات {reciter.name_ar} مرتبة تاريخياً</p>
+                                    </div>
+                                    <ReciterTimeline
+                                        recordings={timelineData.map((t: any) => ({
+                                            id: t.id,
+                                            title: t.title || (t.surah_number ? `سورة ${getSurahName(t.surah_number)}` : 'تسجيل عام'),
+                                            surah_number: t.surah_number,
+                                            ayah_start: t.ayah_start,
+                                            ayah_end: t.ayah_end,
+                                            recording_date: t.recording_date,
+                                            created_at: t.created_at,
+                                            section: t.section,
+                                            reciterName: t.reciter?.name_ar || 'Unknown',
+                                            src: t.media_files?.[0]?.archive_url || '',
+                                            city: t.city,
+                                            duration: t.duration,
+                                            reciterId: reciter.id,
+                                            recording_coverage: t.recording_coverage,
+                                            type: t.type,
+                                            videoUrl: t.video_url,
+                                            videoThumbnail: t.video_thumbnail,
+                                            play_count: t.play_count
+                                        }))}
+                                    />
+                                </div>
+                            ) : (
+                                <>
+                                    {/* Phases (hidden for simplicity unless meaningful, user focus is sections) */}
+
+                                    {/* Sections Grid - Updated gap-5 to match 20px request */}
+                                    <div>
+                                        {sectionsWithRecordings.length === 0 ? (
+                                            <div className="text-center py-20 bg-white dark:bg-[#0f172a] rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
+                                                <div className="text-4xl mb-4">📂</div>
+                                                <p className="text-xl text-slate-600 dark:text-slate-400 font-medium">
+                                                    لم تُضاف تلاوات لهذا القارئ بعد
+                                                </p>
+                                            </div>
+                                        ) : (
+                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                                                {sectionsWithRecordings.map(({ section, count }) => (
+                                                    <CollectionCard
+                                                        key={section.id}
+                                                        section={section}
+                                                        count={count}
+                                                        reciterId={reciter.id}
+                                                    // Icons logic could be mapped here if we had a mapping or stored in DB
+                                                    // For now, default icon in component
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    )}
+                </div>
             </main>
         </div>
     );

@@ -1,14 +1,11 @@
-
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { getRecording, getSimilarRecordings } from "@/lib/supabase/queries";
-import { formatTime } from "@/lib/utils";
-import { formatDualYear } from "@/lib/date-utils";
-import PlayButton from "@/components/player/PlayButton";
-import QueueButton from "@/components/player/QueueButton";
-import DownloadButton from "@/components/offline/DownloadButton";
 import { Metadata } from "next";
 import { getSurahName } from "@/lib/quran-helpers";
+import RecordingSidebar from "@/components/recordings/RecordingSidebar";
+import RecordingPlaylist from "@/components/recordings/RecordingPlaylist";
+
+import { formatDualYear } from "@/lib/date-utils";
 
 interface RecordingPageProps {
     params: Promise<{
@@ -22,32 +19,17 @@ export async function generateMetadata({ params }: RecordingPageProps): Promise<
     if (!recording) return { title: "تلاوة غير موجودة" };
 
     let displayTitle = recording.title;
-    let description = "";
 
     if (!displayTitle) {
-        if (recording.recording_coverage && recording.recording_coverage.length > 1) {
-            const surahNames = recording.recording_coverage
-                .map((seg: any) => getSurahName(seg.surah_number))
-                .join(" و");
-            displayTitle = `سورة ${surahNames} - ${recording.reciter.name_ar}`;
-            description = `استمع لتلاوة سور ${surahNames} بصوت القارئ ${recording.reciter.name_ar}.`;
-        } else {
-            const surahName = recording.surah_number ? getSurahName(recording.surah_number) : "عامة";
-            displayTitle = recording.surah_number ? `سورة ${surahName} - ${recording.reciter.name_ar}` : `${recording.reciter.name_ar}`;
-            description = `استمع لتلاوة سورة ${surahName} بصوت القارئ ${recording.reciter.name_ar}.`;
-        }
-    } else {
-        description = `استمع لتلاوة ${displayTitle} بصوت القارئ ${recording.reciter.name_ar}.`;
+        const surahName = recording.surah_number ? getSurahName(recording.surah_number) : "عامة";
+        displayTitle = recording.surah_number ? `سورة ${surahName} - ${recording.reciter.name_ar}` : `${recording.reciter.name_ar}`;
     }
 
     return {
         title: `${displayTitle} | موسوعة القراء`,
-        description: `${description} الدولة: ${recording.city}. التاريخ: ${recording.recording_date?.year || 'غير معروف'}.`
+        description: `استمع لتلاوة ${displayTitle} بصوت القارئ ${recording.reciter.name_ar}.`
     };
 }
-
-import CitationExport from "@/components/recordings/CitationExport";
-import RecordingHeaderVisualizer from "@/components/recordings/RecordingHeaderVisualizer";
 
 export default async function RecordingPage({ params }: RecordingPageProps) {
     const { id } = await params;
@@ -69,9 +51,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
         ayahEnd: rec.ayah_end,
         reciterId: recording.reciter.id,
         sectionSlug: recording.section.slug,
-    })).filter(t => t.src);
+    })).filter((t: { src: any; }) => t.src);
 
-    // Determine all surahs for similarity search
+    // Similar Recordings logic
     const surahNumbers = new Set<number>();
     if (recording.surah_number) surahNumbers.add(recording.surah_number);
     if (recording.recording_coverage) {
@@ -80,9 +62,9 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
         });
     }
     const uniqueSurahArray = Array.from(surahNumbers);
-    const similarRecordings = uniqueSurahArray.length > 0 ? await getSimilarRecordings(recording.id, uniqueSurahArray) : [];
+    const similarRecordings = uniqueSurahArray.length > 0 ? await getSimilarRecordings(recording.id, uniqueSurahArray, 10) : [];
 
-    // Construct display title for the page
+    // Construct display title
     let displayTitle = recording.title;
     if (!displayTitle) {
         if (recording.recording_coverage && recording.recording_coverage.length > 1) {
@@ -97,350 +79,99 @@ export default async function RecordingPage({ params }: RecordingPageProps) {
         }
     }
 
-    // Sort coverage segments if they exist for better display
-    if (recording.recording_coverage) {
-        recording.recording_coverage.sort((a: any, b: any) => {
-            if (a.surah_number !== b.surah_number) return a.surah_number - b.surah_number;
-            return a.ayah_start - b.ayah_start;
-        });
-    }
-
-    const isVideo = recording.type === 'video';
-
-    // Construct track object for player
-    const track = {
+    // Prepare current track object
+    const currentTrack = {
         id: recording.id,
         title: displayTitle,
         reciterName: recording.reciter.name_ar,
         src: recording.media_files?.find((m: any) => m.media_type === 'audio')?.archive_url || '',
         duration: recording.duration_seconds,
-        isVideo: isVideo,
+        isVideo: recording.type === 'video',
         videoUrl: recording.video_url,
     };
 
+    // Prepare Playlist Tracks
+    const playlistTracks = similarRecordings.map((sim: any) => ({
+        id: sim.id,
+        title: sim.title || (sim.surah_number ? `سورة ${getSurahName(sim.surah_number)}` : (sim.sections?.name_ar || 'تلاوة')),
+        reciterName: sim.reciter?.name_ar || 'Unknown',
+        reciterId: sim.reciter?.id,
+        reciterImage: sim.reciter?.image_url,
+        sectionName: sim.section?.name_ar,
+        src: sim.media_files?.[0]?.archive_url,
+        surahNumber: sim.surah_number
+    }));
+
     return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
-            {/* ... header remains ... */}
-            <header className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
-                <div className="container mx-auto px-4 py-8">
-                    <div className="flex flex-col md:flex-row gap-8 items-center md:items-start">
-                        {/* Reciter Image */}
-                        <Link href={`/reciters/${recording.reciter.id}`} className="shrink-0 group relative">
-                            <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden border-4 border-white dark:border-slate-700 shadow-lg">
-                                {recording.reciter.image_url ? (
-                                    <img
-                                        src={recording.reciter.image_url}
-                                        alt={recording.reciter.name_ar}
-                                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-4xl">
-                                        🎙️
-                                    </div>
-                                )}
-                            </div>
-                        </Link>
+        // Layout: Mobile is min-h-screen (natural scroll). Desktop is h-screen with fixed containers.
+        <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen lg:overflow-hidden bg-white dark:bg-[#020617] text-slate-900 dark:text-white font-sans transition-colors duration-300" dir="rtl">
 
-                        {/* Info */}
-                        <div className="flex-1 text-center md:text-right space-y-4">
-                            <div>
-                                <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                                    {displayTitle}
-                                </h1>
-                            </div>
+            {/* Sidebar: In mobile (col), it comes naturally first. */}
+            <RecordingSidebar
+                recording={recording}
+                displayTitle={displayTitle}
+                track={currentTrack}
+                contextTracks={contextTracks}
+            />
 
-                            {/* Split Row: Metadata (Right) | Details Box (Left) */}
-                            <div className="flex flex-col md:flex-row gap-6 mt-4 items-start">
-                                {/* Right Side: Metadata & Actions */}
-                                <div className="flex-1 w-full md:w-auto space-y-4">
-                                    {/* Reciter Name - Moved Here for Alignment */}
-                                    <div>
-                                        <Link
-                                            href={`/reciters/${recording.reciter.id}`}
-                                            className="text-xl text-emerald-600 dark:text-emerald-400 hover:underline inline-block"
-                                        >
-                                            الشيخ {recording.reciter.name_ar}
-                                        </Link>
-                                    </div>
+            {/* Main Content Area */}
+            {/* Mobile: auto height. Desktop: full height, scrollable */}
+            <main className="flex-1 lg:overflow-y-auto bg-slate-50 dark:bg-gradient-to-b dark:from-[#0f172a] dark:to-[#020617] relative p-6 lg:p-10">
 
-                                    <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                                        {/* Play Count */}
-                                        {recording.play_count !== undefined && recording.play_count !== null && (
-                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 flex items-center gap-2">
-                                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                                                </svg>
-                                                {Number(recording.play_count || 0).toLocaleString('ar-EG')} استماع
-                                            </span>
-                                        )}
-
-                                        {/* City - clickable */}
-                                        <Link href={`/reciters/${recording.reciter.id}/filter?type=city&value=${encodeURIComponent(recording.city)}`}>
-                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer">
-                                                📍 {recording.city}
-                                            </span>
-                                        </Link>
-
-                                        {/* Year - clickable */}
-                                        {recording.recording_date?.year && (
-                                            <Link href={`/reciters/${recording.reciter.id}/filter?type=year&value=${recording.recording_date.year}`}>
-                                                <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer">
-                                                    📅 {formatDualYear(recording.recording_date.year) || "غير مؤرخ"}
-                                                </span>
-                                            </Link>
-                                        )}
-
-                                        {/* Section */}
-                                        <Link
-                                            href={`/reciters/${recording.reciter.id}/${recording.section?.slug}`}
-                                            className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
-                                        >
-                                            📂 {recording.section?.name_ar}
-                                        </Link>
-
-                                        {/* Album - new clickable badge */}
-                                        {recording.album && (
-                                            <Link href={`/reciters/${recording.reciter.id}/filter?type=album&value=${encodeURIComponent(recording.album)}`}>
-                                                <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors cursor-pointer">
-                                                    📀 {recording.album}
-                                                </span>
-                                            </Link>
-                                        )}
-
-                                        {/* Publisher - new badge */}
-                                        {recording.publisher && (
-                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                                                🏛️ {recording.publisher}
-                                            </span>
-                                        )}
-
-                                        {/* Venue - new badge */}
-                                        {recording.venue && (
-                                            <span className="px-3 py-1 rounded-full text-sm bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                                                🕌 {recording.venue}
-                                            </span>
-                                        )}
-
-                                        {/* Rarity */}
-                                        {recording.rarity_classification !== 'common' && (
-                                            <span className={`px-3 py-1 rounded-full text-sm text-white ${recording.rarity_classification === 'very_rare' ? 'bg-purple-600' :
-                                                recording.rarity_classification === 'rare' ? 'bg-red-500' : 'bg-amber-500'
-                                                }`}>
-                                                💎 {recording.rarity_classification === 'very_rare' ? 'نوادر خاصة' : 'نادرة'}
-                                            </span>
-                                        )}
-
-                                        {/* Coverage segments - new */}
-                                        {recording.recording_coverage && recording.recording_coverage.length > 0 && (
-                                            recording.recording_coverage.map((seg: any, idx: number) => (
-                                                <span key={idx} className="px-3 py-1 rounded-full text-sm bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 font-medium">
-                                                    {getSurahName(seg.surah_number)} ({seg.ayah_start}-{seg.ayah_end})
-                                                </span>
-                                            ))
-                                        )}
-                                    </div>
-
-                                    <div className="flex flex-wrap justify-center md:justify-start gap-3">
-                                        {isVideo ? (
-                                            <a
-                                                href="#video-player"
-                                                className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-500/20 transition-all transform hover:-translate-y-0.5"
-                                            >
-                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                                                    <path d="M8 5v14l11-7z" />
-                                                </svg>
-                                                مشاهدة الفيديو
-                                            </a>
-                                        ) : (
-                                            <>
-                                                <PlayButton track={track} contextTracks={contextTracks} size="lg" />
-                                                <QueueButton track={track} label="إضافة لقائمة التشغيل" variant="ghost" />
-                                                <DownloadButton
-                                                    trackId={track.id}
-                                                    title={track.title}
-                                                    reciterName={track.reciterName}
-                                                    audioUrl={track.src}
-                                                    surahNumber={recording.surah_number}
-                                                />
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        </div> {/* End Info Div */}
-                    </div>
+                {/* Section Header */}
+                <div className="mb-6 lg:mb-8 flex items-center gap-3">
+                    <span className="text-xl lg:text-2xl text-amber-500">✨</span>
+                    <h2 className="text-xl lg:text-2xl font-extrabold text-slate-900 dark:text-white">
+                        تلاوات أخرى <span className="text-slate-400">مقترحة</span>
+                    </h2>
                 </div>
-            </header>
 
-            <main className="container mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 gap-8">
-                    {/* Main Content */}
-                    <div className="space-y-8">
-                        {/* Video Player if applicable */}
-                        {isVideo && recording.video_url && (
-                            <div id="video-player" className="bg-black rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10 aspect-video">
-                                {(() => {
-                                    const url = recording.video_url;
-                                    const isYoutube = url.includes('youtube.com') || url.includes('youtu.be');
-                                    const isArchive = url.includes('archive.org');
+                <div className="max-w-3xl">
+                    <RecordingPlaylist
+                        currentRecordingId={recording.id}
+                        tracks={playlistTracks}
+                    />
+                </div>
 
-                                    if (isYoutube) {
-                                        const videoId = url.match(/v=([^&]+)/)?.[1] || url.split('/').pop();
-                                        return (
-                                            <iframe
-                                                src={`https://www.youtube.com/embed/${videoId}?rel=0`}
-                                                className="w-full h-full"
-                                                allowFullScreen
-                                            ></iframe>
-                                        );
-                                    } else if (isArchive) {
-                                        const identifier = url.match(/(details|download)\/([^\/\?\#&]+)/)?.[2];
-                                        return (
-                                            <iframe
-                                                src={`https://archive.org/embed/${identifier}`}
-                                                className="w-full h-full"
-                                                allowFullScreen
-                                            ></iframe>
-                                        );
-                                    } else if (/\.(mp4|webm|ogv)$/i.test(url)) {
-                                        return (
-                                            <video src={url} controls className="w-full h-full" poster={recording.video_thumbnail} />
-                                        );
-                                    }
-                                    return <div className="flex items-center justify-center h-full text-white">رابط الفيديو غير مدعوم للمعالجة المباشرة</div>;
-                                })()}
-                            </div>
-                        )}
-
-                        {/* Description & Details */}
-                        {(recording.source_description || recording.recording_details) && (
-                            <div className="bg-white dark:bg-slate-800 rounded-2xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-700">
-                                {recording.recording_details && (
-                                    <div className="mb-6 last:mb-0">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                            <span className="text-emerald-500">📝</span>
-                                            تفاصيل التلاوة
-                                        </h3>
-                                        <p className="text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">
-                                            {recording.recording_details}
-                                        </p>
-                                    </div>
-                                )}
-
-                                {recording.source_description && (
-                                    <div className="last:mb-0">
-                                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                                            <span className="text-emerald-500">ℹ️</span>
-                                            عن المصدر
-                                        </h3>
-                                        <div className="text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border border-slate-100 dark:border-slate-700/50 text-sm">
-                                            {recording.source_description}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Similar Recordings */}
-                        <div className="pt-4">
-                            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 flex items-center gap-3">
-                                <span className="text-emerald-500">✨</span>
-                                {uniqueSurahArray.length === 1 ? `تلاوات أخرى لسورة ${getSurahName(uniqueSurahArray[0])}` : 'تلاوات مشابهة'}
-                            </h2>
-
-                            {similarRecordings.length > 0 ? (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    {similarRecordings.map((sim: any) => (
-                                        <Link
-                                            key={sim.id}
-                                            href={`/recordings/${sim.id}`}
-                                            className="block group h-full"
-                                        >
-                                            <div className="bg-white dark:bg-slate-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all border border-slate-200 dark:border-slate-700/50 hover:border-emerald-500 h-full flex flex-col">
-                                                <div className="p-5 flex items-start gap-4">
-                                                    <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0">
-                                                        {sim.reciter?.image_url && (
-                                                            <img
-                                                                src={sim.reciter.image_url}
-                                                                alt={sim.reciter.name_ar}
-                                                                className="w-full h-full object-cover"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="flex items-center flex-wrap gap-2 mb-2">
-                                                            <h4 className="font-bold text-slate-900 dark:text-white text-base leading-snug group-hover:text-emerald-600 transition-colors">
-                                                                {sim.title || (sim.surah_number ? `سورة ${getSurahName(sim.surah_number)}` : (sim.sections?.name_ar || 'تلاوة'))}
-                                                            </h4>
-                                                            <span className="text-sm text-slate-500 dark:text-slate-400 font-medium">
-                                                                {sim.section?.name_ar}
-                                                            </span>
-                                                        </div>
-                                                        <div className="flex flex-col gap-2">
-                                                            <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
-                                                                الشيخ {sim.reciter?.name_ar}
-                                                            </h3>
-                                                            <div className="flex items-center gap-2 flex-wrap">
-                                                                {sim.type === 'video' ? (
-                                                                    <Link
-                                                                        href={`/recordings/${sim.id}`}
-                                                                        className="flex items-center gap-2 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 rounded-lg text-xs font-bold transition-colors"
-                                                                    >
-                                                                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                                                                            <path d="M8 5v14l11-7z" />
-                                                                        </svg>
-                                                                        مشاهدة
-                                                                    </Link>
-                                                                ) : (
-                                                                    <>
-                                                                        <PlayButton
-                                                                            track={{
-                                                                                id: sim.id,
-                                                                                title: sim.title || `سورة ${getSurahName(sim.surah_number)}`,
-                                                                                reciterName: sim.reciter.name_ar,
-                                                                                src: sim.media_files?.[0]?.archive_url || "",
-                                                                                surahNumber: sim.surah_number,
-                                                                                reciterId: sim.reciter.id,
-                                                                            }}
-                                                                            size="sm"
-                                                                        />
-                                                                        <QueueButton
-                                                                            variant="ghost"
-                                                                            size="sm"
-                                                                            track={{
-                                                                                id: sim.id,
-                                                                                title: sim.title || `سورة ${getSurahName(sim.surah_number)}`,
-                                                                                reciterName: sim.reciter.name_ar,
-                                                                                src: sim.media_files?.[0]?.archive_url || "",
-                                                                                surahNumber: sim.surah_number,
-                                                                                reciterId: sim.reciter.id,
-                                                                            }}
-                                                                        />
-                                                                    </>
-                                                                )}
-                                                                {/* City and Date - moved here */}
-                                                                <span className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-                                                                    📍 {sim.city} {sim.recording_date?.year ? `• ${formatDualYear(sim.recording_date.year)}` : ''}
-                                                                </span>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            ) : (
-                                <div className="text-center py-10 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-800 rounded-xl border border-dashed border-slate-300 dark:border-slate-700">
-                                    لا توجد تلاوات مشابهة حالياً
+                {/* Info Panel Details */}
+                <div className="mt-8 lg:mt-12 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden max-w-3xl shadow-sm dark:shadow-none">
+                    <details className="group border-b border-slate-100 dark:border-white/5 last:border-0" open>
+                        <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors select-none">
+                            <span className="font-bold text-slate-600 dark:text-slate-300 group-open:text-emerald-600 dark:group-open:text-emerald-500 flex items-center gap-2">
+                                ℹ️ تفاصيل ومصدر التسجيل
+                            </span>
+                            <span className="text-xl group-open:rotate-180 transition-transform text-slate-400">
+                                ⌄
+                            </span>
+                        </summary>
+                        <div className="p-5 pt-0 text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                            {recording.recording_details || "لا توجد تفاصيل إضافية متاحة."}
+                            <br /><br />
+                            {recording.source_description && (
+                                <div className="bg-slate-50 dark:bg-black/20 p-3 rounded-lg border border-slate-100 dark:border-white/5">
+                                    <strong>المصدر:</strong> {recording.source_description}
                                 </div>
                             )}
                         </div>
-                        <div className="pt-8">
-                            <CitationExport recording={recording} />
+                    </details>
+
+                    <details className="group border-b border-white/5 last:border-0">
+                        <summary className="flex items-center justify-between p-5 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors select-none">
+                            <span className="font-bold text-slate-600 dark:text-slate-300 group-open:text-emerald-600 dark:group-open:text-emerald-500 flex items-center gap-2">
+                                📚 البيانات التقنية
+                            </span>
+                            <span className="text-xl group-open:rotate-180 transition-transform text-slate-400">
+                                ⌄
+                            </span>
+                        </summary>
+                        <div className="p-5 pt-0 text-slate-500 dark:text-slate-400 text-sm leading-relaxed space-y-2">
+                            <div><strong>المعرف:</strong> <span className="font-mono bg-slate-100 dark:bg-white/5 px-2 rounded text-xs text-slate-600 dark:text-slate-300">{recording.id.split('-')[0]}...</span></div>
+                            {recording.recording_date?.year && <div><strong>السنة:</strong> {formatDualYear(recording.recording_date.year)}</div>}
+                            {recording.publisher && <div><strong>الناشر:</strong> {recording.publisher}</div>}
                         </div>
-                    </div>
+                    </details>
                 </div>
+
             </main>
         </div>
     );

@@ -80,7 +80,7 @@ export default function RecordingItem({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                        <Link href={`/recordings/${recording.id}`} className="block hover:no-underline group/link">
+                        <div className="block group/link">
                             <h4 className="text-base font-bold text-slate-900 dark:text-white truncate group-hover/link:text-emerald-600 dark:group-hover/link:text-emerald-400 transition-colors">
                                 {recording.title || (recording.surah_number ? `سورة ${getSurahName(recording.surah_number)}` : 'تسجيل عام')}
                                 {isVideo && <span className="mr-2 text-sm bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 px-1.5 py-0.5 rounded-full">فيديو</span>}
@@ -170,7 +170,7 @@ export default function RecordingItem({
                                 )}
                             </div>
 
-                        </Link>
+                        </div>
 
                         {/* Progress Bar - Moved outside Link for better layout stability */}
                         {progress > 0 && (
@@ -196,7 +196,7 @@ export default function RecordingItem({
             </div>
 
             {/* Actions Area - Mobile Column, Desktop Row */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0 mt-3 sm:mt-0">
+            <div className="relative z-20 flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto shrink-0 mt-3 sm:mt-0">
                 {isVideo ? (
                     <button
                         onClick={() => onVideoSelect?.(recording)}
@@ -240,6 +240,13 @@ export default function RecordingItem({
                     </>
                 )}
             </div>
+
+            {/* Global Link Overlay */}
+            <Link
+                href={`/recordings/${recording.id}`}
+                className="absolute inset-0 z-10"
+                aria-label={recording.title || 'عرض تفاصيل التلاوة'}
+            />
         </div>
     );
 }
