@@ -2,6 +2,10 @@
 
 import { formatDualYear } from "@/lib/date-utils";
 import { useState } from "react";
+import { usePlayer } from "@/hooks/usePlayer";
+import { getRadioTracks } from "@/app/actions/radio";
+import { Track } from "@/types/player";
+import { getSurahName } from "@/lib/quran-helpers";
 
 interface ReciterSidebarProps {
     reciter: {
@@ -21,6 +25,8 @@ interface ReciterSidebarProps {
 
 export default function ReciterSidebar({ reciter, stats }: ReciterSidebarProps) {
     const [isBioExpanded, setIsBioExpanded] = useState(false);
+    const [isLoadingRadio, setIsLoadingRadio] = useState(false);
+    const { playTrack, setQueue } = usePlayer();
 
     // Helper to get year from date string
     const getYear = (dateStr?: string | null) => {
@@ -30,6 +36,47 @@ export default function ReciterSidebar({ reciter, stats }: ReciterSidebarProps) 
 
     const birthYear = getYear(reciter.birth_date);
     const deathYear = getYear(reciter.death_date);
+
+    const handleCopyLink = () => {
+        navigator.clipboard.writeText(window.location.href);
+        // You would typically show a toast here
+        alert("تم نسخ الرابط بنجاح");
+    };
+
+    const handlePlayReciterRadio = async () => {
+        try {
+            setIsLoadingRadio(true);
+            // Fetch random tracks for this reciter
+            const tracks = await getRadioTracks(20, { reciterId: reciter.id });
+
+            if (!tracks || tracks.length === 0) {
+                alert("عذراً، لا توجد تلاوات كافية لتشغيل الإذاعة لهذا القارئ.");
+                return;
+            }
+
+            // Map to Player Track format
+            const playerTracks: Track[] = tracks.map((t: any) => ({
+                id: t.id,
+                title: t.title || (t.surah_number ? `سورة ${getSurahName(t.surah_number)}` : 'تلاوة نادرة'),
+                reciterName: t.reciter?.name_ar || reciter.name_ar,
+                src: t.media_files?.[0]?.archive_url || '',
+                surahNumber: t.surah_number,
+                reciterId: reciter.id,
+                isRadio: true
+            })).filter((t: any) => t.src);
+
+            if (playerTracks.length > 0) {
+                // Play first, queue rest
+                playTrack(playerTracks[0]);
+                setQueue(playerTracks);
+            }
+        } catch (error) {
+            console.error("Radio Error:", error);
+            alert("حدث خطأ أثناء تشغيل الإذاعة");
+        } finally {
+            setIsLoadingRadio(false);
+        }
+    };
 
     return (
         // Mobile: w-full, centered content. Desktop: Fixed sidebar, 420px width.
@@ -87,7 +134,7 @@ export default function ReciterSidebar({ reciter, stats }: ReciterSidebarProps) 
             {/* Bio Box */}
             {reciter.biography_ar && (
                 <div className="bg-slate-50 dark:bg-[rgba(255,255,255,0.03)] border border-slate-200 dark:border-white/10 rounded-2xl p-5 mb-6 text-justify">
-                    <div className={`text-slate-600 dark:text-slate-400 text-sm leading-relaxed ${!isBioExpanded ? 'line-clamp-4' : ''}`}>
+                    <div className={`text-slate-600 dark:text-slate-400 text-sm leading-relaxed ${!isBioExpanded ? 'line-clamp-[10]' : ''}`}>
                         <strong className="text-slate-900 dark:text-white font-bold block mb-2">{reciter.name_ar}</strong>
                         {reciter.biography_ar.split('\n').map((line, idx) => {
                             if (!line.trim()) return <br key={idx} className="block content-[''] mb-2" />;
@@ -119,11 +166,23 @@ export default function ReciterSidebar({ reciter, stats }: ReciterSidebarProps) 
 
             {/* Actions Buttons */}
             <div className="grid grid-cols-2 gap-3 mt-auto">
-                <button className="bg-transparent border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 py-3.5 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2">
-                    <span className="text-red-500 text-lg">❤️</span> مفضلة
+                <button
+                    onClick={handlePlayReciterRadio}
+                    disabled={isLoadingRadio}
+                    className="bg-emerald-500 text-white border border-emerald-600 py-3.5 rounded-xl font-bold hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/20 disabled:opacity-70 disabled:cursor-wait transition-all text-sm flex items-center justify-center gap-2"
+                >
+                    {isLoadingRadio ? (
+                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    ) : (
+                        <span className="text-lg">📻</span>
+                    )}
+                    إذاعة القارئ
                 </button>
-                <button className="bg-transparent border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 py-3.5 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2">
-                    <span className="text-lg">🔗</span> مشاركة
+                <button
+                    onClick={handleCopyLink}
+                    className="bg-transparent border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 py-3.5 rounded-xl font-bold hover:bg-slate-50 dark:hover:bg-[#1e293b] hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-500 transition-all text-sm flex items-center justify-center gap-2"
+                >
+                    <span className="text-lg">🔗</span> نسخ الرابط
                 </button>
             </div>
         </aside>

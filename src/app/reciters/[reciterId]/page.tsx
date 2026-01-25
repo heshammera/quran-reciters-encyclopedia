@@ -13,6 +13,7 @@ import CollectionCard from "@/components/reciters/CollectionCard";
 import ReciterVideos from "@/components/reciters/ReciterVideos";
 import ReciterTimeline from "@/components/reciters/ReciterTimeline";
 import { getSurahName } from "@/lib/quran-helpers";
+import SectionGrid from "@/components/reciters/SectionGrid";
 
 interface ReciterPageProps {
     params: Promise<{
@@ -86,7 +87,7 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                         <div className="flex items-center gap-3">
                             <span className="text-2xl">📚</span>
                             <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white">
-                                المكتبة <span className="text-amber-500">الشاملة</span>
+                                المكتبة <span className="text-emerald-500">الصوتية</span>
                             </h2>
                         </div>
 
@@ -116,20 +117,17 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                     {/* Content based on Tab */}
                     {activeTab === 'visuals' ? (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                            {/* Keep existing Video component but wrapper might need styling tweaks if it relied on white bg */}
                             <ReciterVideos videos={videos} />
                         </div>
                     ) : (
                         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
 
-                            {/* 2. Secondary Navigation (Departments / Timeline) */}
-                            {/* Only show if we have data or need to toggle */}
+                            {/* 2. Secondary Navigation */}
                             <div className="flex justify-between items-center mb-6">
                                 <h3 className="text-sm font-bold text-slate-500 dark:text-slate-400 opacity-80">
                                     {isTimelineView ? 'المخطط الزمني' : 'الأقسام المتاحة'}
                                 </h3>
 
-                                {/* Mini Toggle for Sections vs Timeline */}
                                 <div className="flex gap-1 bg-white dark:bg-[rgba(255,255,255,0.03)] p-1 rounded-lg border border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
                                     <Link
                                         href={`/reciters/${reciterId}?tab=audio`}
@@ -181,34 +179,21 @@ export default async function ReciterPage({ params, searchParams }: ReciterPageP
                                     />
                                 </div>
                             ) : (
-                                <>
-                                    {/* Phases (hidden for simplicity unless meaningful, user focus is sections) */}
-
-                                    {/* Sections Grid - Updated gap-5 to match 20px request */}
-                                    <div>
-                                        {sectionsWithRecordings.length === 0 ? (
-                                            <div className="text-center py-20 bg-white dark:bg-[#0f172a] rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
-                                                <div className="text-4xl mb-4">📂</div>
-                                                <p className="text-xl text-slate-600 dark:text-slate-400 font-medium">
-                                                    لم تُضاف تلاوات لهذا القارئ بعد
-                                                </p>
-                                            </div>
-                                        ) : (
-                                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                                {sectionsWithRecordings.map(({ section, count }) => (
-                                                    <CollectionCard
-                                                        key={section.id}
-                                                        section={section}
-                                                        count={count}
-                                                        reciterId={reciter.id}
-                                                    // Icons logic could be mapped here if we had a mapping or stored in DB
-                                                    // For now, default icon in component
-                                                    />
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
-                                </>
+                                <div>
+                                    {sectionsWithRecordings.length === 0 ? (
+                                        <div className="text-center py-20 bg-white dark:bg-[#0f172a] rounded-2xl border border-dashed border-slate-200 dark:border-white/5">
+                                            <div className="text-4xl mb-4">📂</div>
+                                            <p className="text-xl text-slate-600 dark:text-slate-400 font-medium">
+                                                لم تُضاف تلاوات لهذا القارئ بعد
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <SectionGrid
+                                            sections={sectionsWithRecordings}
+                                            reciterId={reciter.id}
+                                        />
+                                    )}
+                                </div>
                             )}
                         </div>
                     )}

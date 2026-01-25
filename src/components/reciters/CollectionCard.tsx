@@ -17,7 +17,18 @@ interface CollectionCardProps {
     icon?: React.ReactNode;
 }
 
+const getSectionIcon = (name: string) => {
+    if (name.includes("مجود")) return "🎤";
+    if (name.includes("مرتل")) return "📖";
+    if (name.includes("حفلات")) return "🕌";
+    if (name.includes("استوديو")) return "🎙️";
+    if (name.includes("إذاعة") || name.includes("إذاعية")) return "📻";
+    return "📂";
+};
+
 export default function CollectionCard({ section, count, reciterId, icon }: CollectionCardProps) {
+    const displayIcon = icon || getSectionIcon(section.name_ar);
+
     return (
         <Link
             href={`/reciters/${reciterId}/${section.slug}`}
@@ -30,8 +41,8 @@ export default function CollectionCard({ section, count, reciterId, icon }: Coll
                 <div className="absolute top-0 left-0 right-0 h-1 bg-slate-100 dark:bg-[#1e293b] group-hover:bg-emerald-500 transition-colors duration-200" />
 
                 <div className="flex justify-between items-start mb-4">
-                    <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 text-2xl border border-slate-100 dark:border-transparent">
-                        {icon || '📚'}
+                    <div className="w-12 h-12 bg-slate-50 dark:bg-white/5 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-500 text-2xl border border-slate-100 dark:border-transparent scale-100 group-hover:scale-110 transition-transform duration-300">
+                        {displayIcon}
                     </div>
                     <span className="text-[10px] font-medium bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 px-2.5 py-1 rounded-full border border-slate-200 dark:border-transparent">
                         {count} تلاوة
